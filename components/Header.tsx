@@ -24,6 +24,7 @@ export default function Header({ user, locale }: { user: User | null; locale: st
   const navLinks = [
     { href: `/${locale}`, label: t('exchange') },
     ...(user ? [
+      { href: `/${locale}/members`, label: t('members') },
       { href: `/${locale}/my-tasks`, label: t('myTasks') },
       { href: `/${locale}/profile/${user.id}`, label: t('profile') },
       ...(user.isAdmin ? [{ href: `/${locale}/admin`, label: t('admin') }] : []),
@@ -45,7 +46,7 @@ export default function Header({ user, locale }: { user: User | null; locale: st
         {/* Logo */}
         <Link
           href={`/${locale}`}
-          className="shrink-0 flex items-center gap-2 group"
+          className="shrink-0 flex items-center gap-2"
           style={{ textDecoration: 'none' }}
         >
           <div
@@ -65,7 +66,7 @@ export default function Header({ user, locale }: { user: User | null; locale: st
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1 flex-1 ml-4">
           {navLinks.map((link) => {
-            const isActive = pathname === link.href
+            const isActive = pathname === link.href || (link.href !== `/${locale}` && pathname.startsWith(link.href))
             return (
               <Link
                 key={link.href}
@@ -120,9 +121,21 @@ export default function Header({ user, locale }: { user: User | null; locale: st
 
           {user ? (
             <>
+              {/* Coin balance — always visible */}
+              <Link
+                href={`/${locale}/profile/${user.id}`}
+                className="coin-chip"
+                style={{ textDecoration: 'none', padding: '0.3rem 0.75rem', display: 'flex', alignItems: 'center', gap: '5px' }}
+                title={user.firstName}
+              >
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--gold)' }}>{user.coins}</span>
+                <span style={{ fontSize: '11px', color: 'var(--gold)', opacity: 0.8 }}>✦</span>
+              </Link>
+
+              {/* Create task button — desktop */}
               <Link
                 href={`/${locale}/tasks/new`}
-                className="hidden md:flex btn-primary"
+                className="btn-primary hidden md:flex"
                 style={{ padding: '0.35rem 0.9rem', fontSize: '0.8rem' }}
               >
                 <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -131,25 +144,48 @@ export default function Header({ user, locale }: { user: User | null; locale: st
                 {t('createTask')}
               </Link>
 
-              <Link
-                href={`/${locale}/profile/${user.id}`}
-                className="flex items-center gap-2 coin-chip"
-                style={{ textDecoration: 'none', padding: '0.3rem 0.65rem' }}
+              {/* Avatar chip — desktop */}
+              <div
+                className="hidden md:flex items-center gap-2"
+                style={{
+                  padding: '0.25rem 0.6rem',
+                  borderRadius: '99px',
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border)',
+                  fontSize: '12px',
+                  color: 'var(--text-2)',
+                  fontWeight: 500,
+                }}
               >
-                <span style={{ fontWeight: 700 }}>{user.coins}</span>
-                <span style={{ fontSize: '10px', opacity: 0.7 }}>✦</span>
-                <span
-                  style={{
-                    fontSize: '12px',
-                    color: 'var(--text-2)',
-                    fontWeight: 500,
-                    display: 'none',
-                  }}
-                  className="sm:block"
-                >
-                  {user.firstName}
-                </span>
-              </Link>
+                <div style={{
+                  width: '20px', height: '20px',
+                  borderRadius: '50%',
+                  background: 'var(--accent-glow)',
+                  border: '1px solid var(--accent-border)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '9px', fontWeight: 700,
+                  color: 'var(--accent-bright)',
+                  flexShrink: 0,
+                }}>
+                  {user.firstName[0].toUpperCase()}
+                </div>
+                {user.firstName}
+                {user.isAdmin && (
+                  <span style={{
+                    fontSize: '9px',
+                    fontWeight: 700,
+                    padding: '1px 5px',
+                    borderRadius: '4px',
+                    background: 'var(--accent-glow)',
+                    color: 'var(--accent-bright)',
+                    border: '1px solid var(--accent-border)',
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                  }}>
+                    admin
+                  </span>
+                )}
+              </div>
             </>
           ) : (
             <Link href={`/${locale}/login`} className="btn-primary" style={{ padding: '0.35rem 0.9rem', fontSize: '0.8rem' }}>
@@ -218,17 +254,17 @@ export default function Header({ user, locale }: { user: User | null; locale: st
             <Link
               href={`/${locale}/tasks/new`}
               onClick={() => setMenuOpen(false)}
+              className="btn-primary"
               style={{
-                padding: '0.6rem 0.75rem',
-                borderRadius: '8px',
+                marginTop: '4px',
+                justifyContent: 'center',
                 fontSize: '0.875rem',
-                fontWeight: 500,
-                color: 'var(--accent-bright)',
-                textDecoration: 'none',
-                display: 'block',
               }}
             >
-              + {t('createTask')}
+              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+              </svg>
+              {t('createTask')}
             </Link>
           )}
         </div>

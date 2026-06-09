@@ -4,6 +4,7 @@
     "myTasks": "My Tasks",
     "profile": "Profile",
     "admin": "Admin",
+    "members": "Members",
     "createTask": "Post Task",
     "login": "Login via Telegram",
     "logout": "Logout"
