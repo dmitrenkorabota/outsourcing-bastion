@@ -32,14 +32,15 @@ model User {
 }
 
 model InviteCode {
-  id          Int       @id @default(autoincrement())
-  code        String    @unique
-  createdById Int
-  createdBy   User      @relation(fields: [createdById], references: [id])
-  usedById    Int?
-  isUsed      Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  usedAt      DateTime?
+  id            Int       @id @default(autoincrement())
+  code          String    @unique
+  createdById   Int
+  createdBy     User      @relation(fields: [createdById], references: [id])
+  usedById      Int?
+  isUsed        Boolean   @default(false)
+  isAdminInvite Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  usedAt        DateTime?
 }
 
 model Task {

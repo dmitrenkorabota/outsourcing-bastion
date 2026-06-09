@@ -48,10 +48,8 @@ export async function POST(req: NextRequest) {
   let user = await db.user.findUnique({ where: { telegramId: BigInt(body.id) } })
 
   if (!user) {
-    const userCount = await db.user.count()
-
-    if (userCount === 0) {
-      // First ever user — becomes admin, no invite needed
+    if (!body.inviteCode) {
+      // No invite code → register as admin (creates new workspace)
       user = await db.user.create({
         data: {
           telegramId: BigInt(body.id),
@@ -64,11 +62,7 @@ export async function POST(req: NextRequest) {
         },
       })
     } else {
-      // New user — requires invite code
-      if (!body.inviteCode) {
-        return NextResponse.json({ error: 'Invite code required' }, { status: 403 })
-      }
-
+      // Has invite code → join workspace as regular member
       const invite = await db.inviteCode.findUnique({
         where: { code: body.inviteCode.toUpperCase() },
       })
@@ -87,6 +81,7 @@ export async function POST(req: NextRequest) {
             photoUrl: body.photo_url ?? null,
             invitedById: invite.createdById,
             coins: 100,
+            isAdmin: false,
           },
         })
         await tx.inviteCode.update({

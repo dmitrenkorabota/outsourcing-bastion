@@ -21,7 +21,7 @@ export default async function TaskPage({ params }: Props) {
     task = await db.task.findUnique({
       where: { id: parseInt(id) },
       include: {
-        poster: { select: { id: true, firstName: true, lastName: true, username: true, rating: true } },
+        poster: { select: { id: true, firstName: true, lastName: true, username: true, rating: true, isAdmin: true, invitedById: true } },
         executor: { select: { id: true, firstName: true, username: true, rating: true } },
       },
     })
@@ -41,18 +41,23 @@ export default async function TaskPage({ params }: Props) {
 
   if (!task) notFound()
 
-  // Access control: only poster, their invitees, or who invited poster can view
+  // Access control: only workspace members can view
   if (session) {
     try {
       const currentUser = await db.user.findUnique({
         where: { id: session.userId },
-        select: { invitedById: true },
+        select: { invitedById: true, isAdmin: true },
       })
-      const canSee =
-        task.posterId === session.userId ||
-        task.executorId === session.userId ||
-        task.poster.invitedById === session.userId ||
-        (currentUser?.invitedById != null && currentUser.invitedById === task.posterId)
+      // Workspace admin for the viewer
+      const viewerWorkspaceAdminId = currentUser?.isAdmin
+        ? session.userId
+        : (currentUser?.invitedById ?? session.userId)
+      // Workspace admin for the poster
+      const posterWorkspaceAdminId = task.poster.isAdmin
+        ? task.posterId
+        : (task.poster.invitedById ?? task.posterId)
+
+      const canSee = viewerWorkspaceAdminId === posterWorkspaceAdminId
       if (!canSee) notFound()
     } catch { /* allow on DB error */ }
   } else {

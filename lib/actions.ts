@@ -195,13 +195,26 @@ export async function createTask(formData: FormData) {
   redirect(`/${locale}/tasks/${task.id}`)
 }
 
+export async function generateAdminInvite(locale: string) {
+  const session = await requireAuth()
+  if (!session.isAdmin) throw new Error('Forbidden')
+
+  const code = Math.random().toString(36).slice(2, 10).toUpperCase()
+  await db.inviteCode.create({
+    data: { code, createdById: session.userId, isAdminInvite: true },
+  })
+  revalidatePath(`/${locale}/admin`)
+  return code
+}
+
 export async function generateInvite(locale: string) {
   const session = await requireAuth()
+  if (!session.isAdmin) throw new Error('Only admins can invite members')
 
   const unusedCount = await db.inviteCode.count({
     where: { createdById: session.userId, isUsed: false },
   })
-  if (unusedCount >= 3) throw new Error('Invite limit reached (max 3 active)')
+  if (unusedCount >= 10) throw new Error('Invite limit reached (max 10 active)')
 
   const code = Math.random().toString(36).slice(2, 10).toUpperCase()
   await db.inviteCode.create({
@@ -221,14 +234,13 @@ export async function grantCoins(formData: FormData) {
   const note = formData.get('note') as string
   const locale = formData.get('locale') as string
 
-  const user = await db.user.findFirst({
-    where: {
-      OR: [
-        { id: isNaN(parseInt(userIdOrUsername)) ? undefined : parseInt(userIdOrUsername) },
-        { username: userIdOrUsername },
-      ],
-    },
-  })
+  const numericId = parseInt(userIdOrUsername)
+  const usernameClean = userIdOrUsername.replace(/^@/, '')
+  const whereClause = !isNaN(numericId)
+    ? { OR: [{ id: numericId }, { username: usernameClean }] }
+    : { username: usernameClean }
+
+  const user = await db.user.findFirst({ where: whereClause })
   if (!user) throw new Error('User not found')
 
   await db.$transaction([
@@ -244,6 +256,8 @@ export async function grantCoins(formData: FormData) {
   ])
 
   revalidatePath(`/${locale}/admin`)
+  revalidatePath(`/${locale}/profile/${user.id}`)
+  revalidatePath(`/${locale}`)
 }
 
 export async function resolveDispute(disputeId: number, resolution: string, payExecutor: boolean, locale: string) {

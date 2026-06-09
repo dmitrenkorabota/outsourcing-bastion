@@ -71,7 +71,7 @@ export default async function LoginPage({ params, searchParams }: Props) {
             {t('loginSubtitle')}
           </p>
 
-          {/* Invite status */}
+          {/* Registration intent banner */}
           {code ? (
             <div style={{
               background: 'rgba(34,197,94,0.08)',
@@ -89,7 +89,7 @@ export default async function LoginPage({ params, searchParams }: Props) {
               <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                 <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              {locale === 'ru' ? 'Инвайт-код принят' : 'Invite code accepted'}
+              {locale === 'ru' ? 'Вас пригласили в рабочее пространство' : 'You have been invited to a workspace'}
               <code style={{ marginLeft: 'auto', fontFamily: 'monospace', fontWeight: 700, fontSize: '12px', opacity: 0.8 }}>
                 {code}
               </code>
@@ -109,9 +109,11 @@ export default async function LoginPage({ params, searchParams }: Props) {
               textAlign: 'left',
             }}>
               <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              {t('inviteRequired')}
+              {locale === 'ru'
+                ? 'Зарегистрируйтесь и создайте своё рабочее пространство'
+                : 'Register and create your own workspace'}
             </div>
           )}
 

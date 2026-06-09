@@ -26,22 +26,20 @@ export async function generateMetadata({ params }: Props) {
 }
 
 async function TaskFeed({
-  locale, userId, invitedById, q, category, minReward, maxReward, sort,
+  locale, workspaceAdminId, q, category, minReward, maxReward, sort,
 }: {
   locale: string
-  userId: number
-  invitedById: number | null
+  workspaceAdminId: number
   q?: string; category?: string
   minReward?: string; maxReward?: string; sort?: string
 }) {
   const t = await getTranslations({ locale, namespace: 'exchange' })
 
-  // Visible tasks: mine + tasks by users I invited + tasks by who invited me
+  // Workspace: tasks posted by admin + tasks posted by workspace members
   const networkFilter = {
     OR: [
-      { posterId: userId },
-      { poster: { invitedById: userId } },
-      ...(invitedById ? [{ posterId: invitedById }] : []),
+      { posterId: workspaceAdminId },
+      { poster: { invitedById: workspaceAdminId } },
     ],
   }
 
@@ -116,28 +114,30 @@ export default async function ExchangePage({ params, searchParams }: Props) {
 
   if (!session) redirect(`/${locale}/login`)
 
-  // Get current user's invite relationship
-  let currentUser: { id: number; invitedById: number | null } | null = null
-  try {
-    currentUser = await db.user.findUnique({
-      where: { id: session.userId },
-      select: { id: true, invitedById: true },
-    })
-  } catch { /* use session userId */ }
-
   const userId = session.userId
-  const invitedById = currentUser?.invitedById ?? null
+  const isAdmin = session.isAdmin
 
-  // Count open tasks visible to this user
+  // Determine workspace admin: for admins it's themselves, for members it's who invited them
+  let workspaceAdminId = userId
+  try {
+    if (!isAdmin) {
+      const currentUser = await db.user.findUnique({
+        where: { id: userId },
+        select: { invitedById: true },
+      })
+      workspaceAdminId = currentUser?.invitedById ?? userId
+    }
+  } catch { /* fallback to userId */ }
+
+  // Count open tasks in this workspace
   let totalOpen = 0
   try {
     totalOpen = await db.task.count({
       where: {
         status: 'OPEN',
         OR: [
-          { posterId: userId },
-          { poster: { invitedById: userId } },
-          ...(invitedById ? [{ posterId: invitedById }] : []),
+          { posterId: workspaceAdminId },
+          { poster: { invitedById: workspaceAdminId } },
         ],
       },
     })
@@ -259,7 +259,7 @@ export default async function ExchangePage({ params, searchParams }: Props) {
           </div>
         }
       >
-        <TaskFeed locale={locale} userId={userId} invitedById={invitedById} {...sp} />
+        <TaskFeed locale={locale} workspaceAdminId={workspaceAdminId} {...sp} />
       </Suspense>
 
       <div style={{ height: '4rem' }} />
