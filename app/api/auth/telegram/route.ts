@@ -48,36 +48,52 @@ export async function POST(req: NextRequest) {
   let user = await db.user.findUnique({ where: { telegramId: BigInt(body.id) } })
 
   if (!user) {
-    // New user — requires invite code
-    if (!body.inviteCode) {
-      return NextResponse.json({ error: 'Invite code required' }, { status: 403 })
-    }
+    const userCount = await db.user.count()
 
-    const invite = await db.inviteCode.findUnique({
-      where: { code: body.inviteCode.toUpperCase() },
-    })
-
-    if (!invite || invite.isUsed) {
-      return NextResponse.json({ error: 'Invalid or used invite code' }, { status: 403 })
-    }
-
-    user = await db.$transaction(async (tx) => {
-      const created = await tx.user.create({
+    if (userCount === 0) {
+      // First ever user — becomes admin, no invite needed
+      user = await db.user.create({
         data: {
           telegramId: BigInt(body.id),
           firstName: body.first_name,
           lastName: body.last_name ?? null,
           username: body.username ?? null,
           photoUrl: body.photo_url ?? null,
-          invitedById: invite.createdById,
+          isAdmin: true,
         },
       })
-      await tx.inviteCode.update({
-        where: { id: invite.id },
-        data: { isUsed: true, usedById: created.id, usedAt: new Date() },
+    } else {
+      // New user — requires invite code
+      if (!body.inviteCode) {
+        return NextResponse.json({ error: 'Invite code required' }, { status: 403 })
+      }
+
+      const invite = await db.inviteCode.findUnique({
+        where: { code: body.inviteCode.toUpperCase() },
       })
-      return created
-    })
+
+      if (!invite || invite.isUsed) {
+        return NextResponse.json({ error: 'Invalid or used invite code' }, { status: 403 })
+      }
+
+      user = await db.$transaction(async (tx) => {
+        const created = await tx.user.create({
+          data: {
+            telegramId: BigInt(body.id),
+            firstName: body.first_name,
+            lastName: body.last_name ?? null,
+            username: body.username ?? null,
+            photoUrl: body.photo_url ?? null,
+            invitedById: invite.createdById,
+          },
+        })
+        await tx.inviteCode.update({
+          where: { id: invite.id },
+          data: { isUsed: true, usedById: created.id, usedAt: new Date() },
+        })
+        return created
+      })
+    }
   } else {
     // Update profile info
     user = await db.user.update({

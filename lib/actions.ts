@@ -192,12 +192,15 @@ export async function createTask(formData: FormData) {
 
 export async function generateInvite(locale: string) {
   const session = await requireAuth()
+
+  const unusedCount = await db.inviteCode.count({
+    where: { createdById: session.userId, isUsed: false },
+  })
+  if (unusedCount >= 3) throw new Error('Invite limit reached (max 3 active)')
+
   const code = Math.random().toString(36).slice(2, 10).toUpperCase()
   await db.inviteCode.create({
-    data: {
-      code,
-      createdById: session.userId,
-    },
+    data: { code, createdById: session.userId },
   })
   revalidatePath(`/${locale}/profile/${session.userId}`)
   return code
