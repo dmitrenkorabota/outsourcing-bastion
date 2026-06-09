@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  telegramId  BigInt   @unique
+  username    String?
+  firstName   String
+  lastName    String?
+  photoUrl    String?
+  coins       Int      @default(0)
+  rating      Float    @default(0)
+  ratingCount Int      @default(0)
+  skills      String[]
+  isAdmin     Boolean  @default(false)
+  invitedById Int?
+  invitedBy   User?    @relation("Invites", fields: [invitedById], references: [id])
+  invitees    User[]   @relation("Invites")
+  createdAt   DateTime @default(now())
+
+  tasksPosted    Task[]        @relation("TaskPoster")
+  tasksTaken     Task[]        @relation("TaskExecutor")
+  transactions   Transaction[]
+  inviteCodes    InviteCode[]
+  disputesRaised Dispute[]     @relation("DisputeRaiser")
+}
+
+model InviteCode {
+  id          Int       @id @default(autoincrement())
+  code        String    @unique
+  createdById Int
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  usedById    Int?
+  isUsed      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  usedAt      DateTime?
+}
+
+model Task {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String
+  reward      Int
+  status      TaskStatus @default(OPEN)
+  category    String?
+  tags        String[]
+  posterId    Int
+  poster      User       @relation("TaskPoster", fields: [posterId], references: [id])
+  executorId  Int?
+  executor    User?      @relation("TaskExecutor", fields: [executorId], references: [id])
+  result      String?
+  deadline    DateTime?
+  createdAt   DateTime   @default(now())
+  takenAt     DateTime?
+  completedAt DateTime?
+
+  transactions Transaction[]
+  disputes     Dispute[]
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+  DISPUTED
+  CANCELLED
+}
+
+model Transaction {
+  id        Int             @id @default(autoincrement())
+  userId    Int
+  user      User            @relation(fields: [userId], references: [id])
+  amount    Int
+  type      TransactionType
+  taskId    Int?
+  task      Task?           @relation(fields: [taskId], references: [id])
+  note      String?
+  createdAt DateTime        @default(now())
+}
+
+enum TransactionType {
+  DEPOSIT
+  TASK_ESCROW
+  TASK_PAYMENT
+  TASK_REFUND
+  ADMIN_GRANT
+}
+
+model Dispute {
+  id         Int           @id @default(autoincrement())
+  taskId     Int
+  task       Task          @relation(fields: [taskId], references: [id])
+  raisedById Int
+  raisedBy   User          @relation("DisputeRaiser", fields: [raisedById], references: [id])
+  reason     String
+  status     DisputeStatus @default(OPEN)
+  resolution String?
+  resolvedAt DateTime?
+  createdAt  DateTime      @default(now())
+}
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED
+}

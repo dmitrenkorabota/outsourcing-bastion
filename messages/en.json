@@ -1,0 +1,164 @@
+{
+  "nav": {
+    "exchange": "Exchange",
+    "myTasks": "My Tasks",
+    "profile": "Profile",
+    "admin": "Admin",
+    "createTask": "Post Task",
+    "login": "Login via Telegram",
+    "logout": "Logout"
+  },
+  "exchange": {
+    "title": "Task Exchange",
+    "subtitle": "Find tasks to execute or delegate your work",
+    "filters": {
+      "all": "All",
+      "search": "Search tasks...",
+      "category": "Category",
+      "minReward": "Min reward",
+      "maxReward": "Max reward",
+      "sortBy": "Sort by",
+      "newest": "Newest",
+      "reward_asc": "Reward: Low to High",
+      "reward_desc": "Reward: High to Low",
+      "reset": "Reset filters"
+    },
+    "empty": "No tasks found",
+    "emptyHint": "Try adjusting the filters or post a new task"
+  },
+  "task": {
+    "coins": "coins",
+    "deadline": "Deadline",
+    "postedBy": "Posted by",
+    "takenBy": "Taken by",
+    "category": "Category",
+    "tags": "Tags",
+    "status": {
+      "OPEN": "Open",
+      "IN_PROGRESS": "In Progress",
+      "REVIEW": "In Review",
+      "COMPLETED": "Completed",
+      "DISPUTED": "Disputed",
+      "CANCELLED": "Cancelled"
+    },
+    "actions": {
+      "take": "Take Task",
+      "submit": "Submit Result",
+      "accept": "Accept & Pay",
+      "dispute": "Open Dispute",
+      "cancel": "Cancel Task"
+    },
+    "result": "Result",
+    "resultPlaceholder": "Describe what you have done and attach links if needed...",
+    "submit": "Submit",
+    "noDeadline": "No deadline",
+    "daysLeft": "{days} days left",
+    "overdue": "Overdue"
+  },
+  "createTask": {
+    "title": "Post New Task",
+    "fields": {
+      "title": "Title",
+      "titlePlaceholder": "Short description of the task",
+      "description": "Description",
+      "descriptionPlaceholder": "Detailed description, requirements, expected result...",
+      "category": "Category",
+      "categoryPlaceholder": "Select category",
+      "tags": "Tags",
+      "tagsPlaceholder": "design, translation, code...",
+      "reward": "Reward (coins)",
+      "rewardPlaceholder": "100",
+      "deadline": "Deadline (optional)"
+    },
+    "balance": "Your balance",
+    "willFreeze": "Will be frozen",
+    "remainingAfter": "Remaining after posting",
+    "notEnough": "Not enough coins",
+    "submit": "Post Task",
+    "categories": {
+      "design": "Design",
+      "development": "Development",
+      "translation": "Translation",
+      "writing": "Writing",
+      "marketing": "Marketing",
+      "data": "Data",
+      "other": "Other"
+    }
+  },
+  "profile": {
+    "balance": "Balance",
+    "rating": "Rating",
+    "skills": "Skills",
+    "addSkill": "Add skill",
+    "history": "Transaction History",
+    "invites": "My Invites",
+    "inviteLink": "Invite Link",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "generateInvite": "Generate Invite",
+    "noInvites": "No invites yet",
+    "transactions": {
+      "DEPOSIT": "Deposit",
+      "TASK_ESCROW": "Task frozen",
+      "TASK_PAYMENT": "Task payment",
+      "TASK_REFUND": "Refund",
+      "ADMIN_GRANT": "Admin grant"
+    },
+    "memberSince": "Member since"
+  },
+  "myTasks": {
+    "title": "My Tasks",
+    "asClient": "As Client",
+    "asExecutor": "As Executor",
+    "empty": {
+      "client": "You haven't posted any tasks yet",
+      "executor": "You haven't taken any tasks yet"
+    }
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "tabs": {
+      "disputes": "Disputes",
+      "moderation": "Moderation",
+      "users": "Users",
+      "grantCoins": "Grant Coins"
+    },
+    "disputes": {
+      "open": "Open",
+      "resolved": "Resolved",
+      "resolve": "Resolve",
+      "resolution": "Resolution",
+      "resolutionPlaceholder": "Describe the resolution...",
+      "refundClient": "Refund to client",
+      "payExecutor": "Pay executor"
+    },
+    "grantCoins": {
+      "user": "User ID or username",
+      "amount": "Amount",
+      "note": "Note (optional)",
+      "submit": "Grant Coins"
+    }
+  },
+  "auth": {
+    "loginTitle": "Welcome to Outsourcing Bastion",
+    "loginSubtitle": "Sign in with Telegram to access the platform",
+    "inviteRequired": "This platform is invite-only",
+    "inviteCode": "Invite Code",
+    "inviteCodePlaceholder": "Enter your invite code",
+    "join": "Join",
+    "invalidCode": "Invalid or already used invite code"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "back": "Back",
+    "noData": "No data"
+  }
+}

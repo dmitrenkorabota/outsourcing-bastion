@@ -1,0 +1,164 @@
+{
+  "nav": {
+    "exchange": "Биржа",
+    "myTasks": "Мои задачи",
+    "profile": "Профиль",
+    "admin": "Админ",
+    "createTask": "Разместить задачу",
+    "login": "Войти через Telegram",
+    "logout": "Выйти"
+  },
+  "exchange": {
+    "title": "Биржа задач",
+    "subtitle": "Найдите задачи для выполнения или делегируйте свои",
+    "filters": {
+      "all": "Все",
+      "search": "Поиск задач...",
+      "category": "Категория",
+      "minReward": "Мин. награда",
+      "maxReward": "Макс. награда",
+      "sortBy": "Сортировать",
+      "newest": "Новые",
+      "reward_asc": "Награда: от низкой",
+      "reward_desc": "Награда: от высокой",
+      "reset": "Сбросить фильтры"
+    },
+    "empty": "Задачи не найдены",
+    "emptyHint": "Попробуйте изменить фильтры или разместите новую задачу"
+  },
+  "task": {
+    "coins": "коинов",
+    "deadline": "Дедлайн",
+    "postedBy": "Разместил",
+    "takenBy": "Взял",
+    "category": "Категория",
+    "tags": "Теги",
+    "status": {
+      "OPEN": "Открыта",
+      "IN_PROGRESS": "В работе",
+      "REVIEW": "На проверке",
+      "COMPLETED": "Завершена",
+      "DISPUTED": "Спор",
+      "CANCELLED": "Отменена"
+    },
+    "actions": {
+      "take": "Взять задачу",
+      "submit": "Сдать результат",
+      "accept": "Принять и оплатить",
+      "dispute": "Открыть спор",
+      "cancel": "Отменить задачу"
+    },
+    "result": "Результат",
+    "resultPlaceholder": "Опишите что сделано, прикрепите ссылки...",
+    "submit": "Отправить",
+    "noDeadline": "Без дедлайна",
+    "daysLeft": "осталось {days} д.",
+    "overdue": "Просрочено"
+  },
+  "createTask": {
+    "title": "Разместить задачу",
+    "fields": {
+      "title": "Заголовок",
+      "titlePlaceholder": "Краткое описание задачи",
+      "description": "Описание",
+      "descriptionPlaceholder": "Подробное описание, требования, ожидаемый результат...",
+      "category": "Категория",
+      "categoryPlaceholder": "Выберите категорию",
+      "tags": "Теги",
+      "tagsPlaceholder": "дизайн, перевод, код...",
+      "reward": "Награда (коины)",
+      "rewardPlaceholder": "100",
+      "deadline": "Дедлайн (опционально)"
+    },
+    "balance": "Ваш баланс",
+    "willFreeze": "Заморозится",
+    "remainingAfter": "Останется после размещения",
+    "notEnough": "Недостаточно коинов",
+    "submit": "Разместить задачу",
+    "categories": {
+      "design": "Дизайн",
+      "development": "Разработка",
+      "translation": "Перевод",
+      "writing": "Тексты",
+      "marketing": "Маркетинг",
+      "data": "Данные",
+      "other": "Другое"
+    }
+  },
+  "profile": {
+    "balance": "Баланс",
+    "rating": "Рейтинг",
+    "skills": "Навыки",
+    "addSkill": "Добавить навык",
+    "history": "История транзакций",
+    "invites": "Мои инвайты",
+    "inviteLink": "Ссылка-приглашение",
+    "copy": "Копировать",
+    "copied": "Скопировано!",
+    "generateInvite": "Создать инвайт",
+    "noInvites": "Инвайтов пока нет",
+    "transactions": {
+      "DEPOSIT": "Пополнение",
+      "TASK_ESCROW": "Заморожено по задаче",
+      "TASK_PAYMENT": "Оплата задачи",
+      "TASK_REFUND": "Возврат",
+      "ADMIN_GRANT": "Начисление от админа"
+    },
+    "memberSince": "На платформе с"
+  },
+  "myTasks": {
+    "title": "Мои задачи",
+    "asClient": "Как заказчик",
+    "asExecutor": "Как исполнитель",
+    "empty": {
+      "client": "Вы ещё не разместили ни одной задачи",
+      "executor": "Вы ещё не брали задачи"
+    }
+  },
+  "admin": {
+    "title": "Панель администратора",
+    "tabs": {
+      "disputes": "Споры",
+      "moderation": "Модерация",
+      "users": "Пользователи",
+      "grantCoins": "Выдать коины"
+    },
+    "disputes": {
+      "open": "Открытые",
+      "resolved": "Решённые",
+      "resolve": "Решить спор",
+      "resolution": "Решение",
+      "resolutionPlaceholder": "Опишите решение...",
+      "refundClient": "Вернуть заказчику",
+      "payExecutor": "Выплатить исполнителю"
+    },
+    "grantCoins": {
+      "user": "ID или username пользователя",
+      "amount": "Количество",
+      "note": "Заметка (опционально)",
+      "submit": "Выдать коины"
+    }
+  },
+  "auth": {
+    "loginTitle": "Добро пожаловать в Outsourcing Bastion",
+    "loginSubtitle": "Войдите через Telegram для доступа к платформе",
+    "inviteRequired": "Платформа работает только по приглашениям",
+    "inviteCode": "Код приглашения",
+    "inviteCodePlaceholder": "Введите код приглашения",
+    "join": "Присоединиться",
+    "invalidCode": "Неверный или использованный код приглашения"
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "error": "Что-то пошло не так",
+    "retry": "Попробовать снова",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "view": "Открыть",
+    "back": "Назад",
+    "noData": "Нет данных"
+  }
+}
