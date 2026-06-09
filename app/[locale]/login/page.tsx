@@ -71,25 +71,49 @@ export default async function LoginPage({ params, searchParams }: Props) {
             {t('loginSubtitle')}
           </p>
 
-          {/* Invite notice */}
-          <div style={{
-            background: 'var(--accent-glow)',
-            border: '1px solid var(--accent-border)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '10px 14px',
-            fontSize: '13px',
-            color: 'var(--accent-bright)',
-            marginBottom: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            textAlign: 'left',
-          }}>
-            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            {t('inviteRequired')}
-          </div>
+          {/* Invite status */}
+          {code ? (
+            <div style={{
+              background: 'rgba(34,197,94,0.08)',
+              border: '1px solid rgba(34,197,94,0.25)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '10px 14px',
+              fontSize: '13px',
+              color: 'var(--success)',
+              marginBottom: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              textAlign: 'left',
+            }}>
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {locale === 'ru' ? 'Инвайт-код принят' : 'Invite code accepted'}
+              <code style={{ marginLeft: 'auto', fontFamily: 'monospace', fontWeight: 700, fontSize: '12px', opacity: 0.8 }}>
+                {code}
+              </code>
+            </div>
+          ) : (
+            <div style={{
+              background: 'var(--accent-glow)',
+              border: '1px solid var(--accent-border)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '10px 14px',
+              fontSize: '13px',
+              color: 'var(--accent-bright)',
+              marginBottom: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              textAlign: 'left',
+            }}>
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {t('inviteRequired')}
+            </div>
+          )}
 
           {botUsername ? (
             <TelegramLoginButton

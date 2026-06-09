@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/session'
 import GenerateInviteButton from '@/components/GenerateInviteButton'
+import CopyInviteLink from '@/components/CopyInviteLink'
 
 type Props = {
   params: Promise<{ locale: string; id: string }>
@@ -174,10 +175,17 @@ export default async function ProfilePage({ params }: Props) {
           {/* Invite codes (own profile) */}
           {isOwn && (
             <div className="card anim-up d1" style={{ padding: '1.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <div className="section-label">{t('invites')}</div>
                 <GenerateInviteButton locale={locale} />
               </div>
+
+              <p style={{ fontSize: '12px', color: 'var(--text-4)', marginBottom: '14px' }}>
+                {locale === 'ru'
+                  ? 'Отправьте ссылку человеку — он зайдёт на сайт и зарегистрируется через Telegram'
+                  : 'Send the link to someone — they visit the site and sign in with Telegram'}
+              </p>
+
               {user.inviteCodes.length === 0 ? (
                 <p style={{ fontSize: '13px', color: 'var(--text-4)' }}>{t('noInvites')}</p>
               ) : (
@@ -186,32 +194,55 @@ export default async function ProfilePage({ params }: Props) {
                     <div
                       key={invite.id}
                       style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '10px 12px',
+                        padding: '12px',
                         background: 'var(--bg-elevated)',
                         borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border)',
+                        border: `1px solid ${invite.isUsed ? 'var(--border)' : 'var(--accent-border)'}`,
+                        opacity: invite.isUsed ? 0.6 : 1,
                       }}
                     >
-                      <div>
-                        <code style={{
-                          fontSize: '13px',
-                          fontFamily: 'ui-monospace, "SF Mono", monospace',
-                          fontWeight: 700,
-                          color: invite.isUsed ? 'var(--text-3)' : 'var(--accent-bright)',
-                          letterSpacing: '0.08em',
-                        }}>
-                          {invite.code}
-                        </code>
-                        <div style={{ fontSize: '11px', color: 'var(--text-4)', marginTop: '2px' }}>
-                          {new Date(invite.createdAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US')}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: invite.isUsed ? 0 : '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <code style={{
+                            fontSize: '13px',
+                            fontFamily: 'ui-monospace, "SF Mono", monospace',
+                            fontWeight: 700,
+                            color: invite.isUsed ? 'var(--text-3)' : 'var(--accent-bright)',
+                            letterSpacing: '0.08em',
+                          }}>
+                            {invite.code}
+                          </code>
+                          <span style={{ fontSize: '11px', color: 'var(--text-4)' }}>
+                            {new Date(invite.createdAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US')}
+                          </span>
                         </div>
+                        <span className={`badge ${invite.isUsed ? 'badge-cancelled' : 'badge-open'}`}>
+                          {invite.isUsed
+                            ? (locale === 'ru' ? 'Использован' : 'Used')
+                            : (locale === 'ru' ? 'Активен' : 'Active')}
+                        </span>
                       </div>
-                      <span className={`badge ${invite.isUsed ? 'badge-cancelled' : 'badge-open'}`}>
-                        {invite.isUsed
-                          ? (locale === 'ru' ? 'Использован' : 'Used')
-                          : (locale === 'ru' ? 'Активен' : 'Active')}
-                      </span>
+
+                      {!invite.isUsed && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{
+                            flex: 1,
+                            fontSize: '11px',
+                            color: 'var(--text-4)',
+                            fontFamily: 'ui-monospace, monospace',
+                            background: 'var(--bg-surface)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '6px',
+                            padding: '5px 8px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            .../login?code={invite.code}
+                          </div>
+                          <CopyInviteLink code={invite.code} locale={locale} />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
