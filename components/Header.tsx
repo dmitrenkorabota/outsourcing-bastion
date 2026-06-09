@@ -4,7 +4,9 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import { useTransition } from 'react'
 import LocaleSwitcher from './LocaleSwitcher'
+import { logout } from '@/lib/actions'
 
 type User = {
   id: number
@@ -20,6 +22,7 @@ export default function Header({ user, locale }: { user: User | null; locale: st
   const t = useTranslations('nav')
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [, startTransition] = useTransition()
 
   const navLinks = [
     { href: `/${locale}`, label: t('exchange') },
@@ -144,6 +147,34 @@ export default function Header({ user, locale }: { user: User | null; locale: st
                 {t('createTask')}
               </Link>
 
+              {/* Logout button */}
+              <button
+                onClick={() => startTransition(() => logout(locale))}
+                className="hidden md:flex"
+                style={{
+                  padding: '0.3rem 0.65rem',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  color: 'var(--text-4)',
+                  background: 'transparent',
+                  border: '1px solid transparent',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--danger)'
+                  e.currentTarget.style.borderColor = 'var(--danger-border)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--text-4)'
+                  e.currentTarget.style.borderColor = 'transparent'
+                }}
+                title={t('logout')}
+              >
+                {t('logout')}
+              </button>
+
               {/* Avatar chip — desktop */}
               <div
                 className="hidden md:flex items-center gap-2"
@@ -251,21 +282,36 @@ export default function Header({ user, locale }: { user: User | null; locale: st
             )
           })}
           {user && (
-            <Link
-              href={`/${locale}/tasks/new`}
-              onClick={() => setMenuOpen(false)}
-              className="btn-primary"
-              style={{
-                marginTop: '4px',
-                justifyContent: 'center',
-                fontSize: '0.875rem',
-              }}
-            >
-              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-              </svg>
-              {t('createTask')}
-            </Link>
+            <>
+              <Link
+                href={`/${locale}/tasks/new`}
+                onClick={() => setMenuOpen(false)}
+                className="btn-primary"
+                style={{ marginTop: '4px', justifyContent: 'center', fontSize: '0.875rem' }}
+              >
+                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+                </svg>
+                {t('createTask')}
+              </Link>
+              <button
+                onClick={() => { setMenuOpen(false); startTransition(() => logout(locale)) }}
+                style={{
+                  padding: '0.6rem 0.75rem',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: 400,
+                  color: 'var(--danger)',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  width: '100%',
+                }}
+              >
+                {t('logout')}
+              </button>
+            </>
           )}
         </div>
       )}

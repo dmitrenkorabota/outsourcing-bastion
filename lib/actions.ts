@@ -3,7 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { db } from './db'
-import { getSession } from './session'
+import { getSession, deleteSession } from './session'
+
+export async function logout(locale: string) {
+  await deleteSession()
+  redirect(`/${locale}/login`)
+}
 
 async function requireAuth() {
   const session = await getSession()
