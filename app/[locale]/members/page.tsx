@@ -101,7 +101,11 @@ export default async function MembersPage({ params }: Props) {
 
       {members.length === 0 ? (
         <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>👥</div>
+          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--bg-surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" style={{ color: 'var(--text-4)' }}>
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
           <p style={{ color: 'var(--text-2)', fontWeight: 500, marginBottom: '6px' }}>
             {locale === 'ru' ? 'Пока никого нет' : 'No members yet'}
           </p>

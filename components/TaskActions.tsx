@@ -12,10 +12,11 @@ type Props = {
   posterId: number
   executorId: number | null
   currentUserId: number | null
+  isAdmin: boolean
   locale: string
 }
 
-export default function TaskActions({ taskId, status, posterId, executorId, currentUserId, locale }: Props) {
+export default function TaskActions({ taskId, status, posterId, executorId, currentUserId, isAdmin, locale }: Props) {
   const t = useTranslations('task')
   const [isPending, startTransition] = useTransition()
   const [showResult, setShowResult] = useState(false)
@@ -105,8 +106,8 @@ export default function TaskActions({ taskId, status, posterId, executorId, curr
         </>
       )}
 
-      {/* Client: accept result */}
-      {status === 'REVIEW' && isClient && (
+      {/* Admin: accept result */}
+      {status === 'REVIEW' && isAdmin && (
         <button
           onClick={() => run(() => acceptResult(taskId, locale))}
           disabled={isPending}

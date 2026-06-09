@@ -21,16 +21,6 @@ type Task = {
   }
 }
 
-const CATEGORY_ICONS: Record<string, string> = {
-  design: '🎨',
-  development: '⚙️',
-  translation: '🌐',
-  writing: '✍️',
-  marketing: '📣',
-  data: '📊',
-  other: '📌',
-}
-
 export default function TaskCard({ task, locale }: { task: Task; locale: string }) {
   const t = useTranslations('task')
 
@@ -45,7 +35,6 @@ export default function TaskCard({ task, locale }: { task: Task; locale: string 
 
   const posterName = task.poster.username ? `@${task.poster.username}` : task.poster.firstName
   const initial = task.poster.firstName[0].toUpperCase()
-  const categoryIcon = task.category ? (CATEGORY_ICONS[task.category] ?? '📌') : null
 
   return (
     <Link
@@ -71,7 +60,6 @@ export default function TaskCard({ task, locale }: { task: Task; locale: string 
               alignItems: 'center',
               gap: '3px',
             }}>
-              {categoryIcon && <span>{categoryIcon}</span>}
               {task.category}
             </span>
           )}

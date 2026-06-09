@@ -123,7 +123,6 @@ export default async function AdminPage({ params, searchParams }: Props) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {openDisputes.length === 0 ? (
               <div className="card" style={{ padding: '4rem 2rem', textAlign: 'center' }}>
-                <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🎉</div>
                 <p style={{ color: 'var(--text-3)' }}>
                   {locale === 'ru' ? 'Открытых споров нет' : 'No open disputes'}
                 </p>

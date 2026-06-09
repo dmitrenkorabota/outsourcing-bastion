@@ -322,6 +322,7 @@ export default async function TaskPage({ params }: Props) {
               posterId={task.posterId}
               executorId={task.executorId}
               currentUserId={session?.userId ?? null}
+              isAdmin={session?.isAdmin ?? false}
               locale={locale}
             />
           </div>

@@ -77,7 +77,11 @@ async function TaskFeed({
   if (tasks.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '5rem 1rem' }}>
-        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📭</div>
+        <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--bg-surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" style={{ color: 'var(--text-4)' }}>
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
         <p style={{ color: 'var(--text-2)', fontWeight: 500, marginBottom: '6px' }}>{t('empty')}</p>
         <p style={{ color: 'var(--text-4)', fontSize: '14px' }}>{t('emptyHint')}</p>
       </div>

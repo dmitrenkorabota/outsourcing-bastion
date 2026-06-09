@@ -48,10 +48,10 @@ export async function submitResult(taskId: number, result: string, locale: strin
 
 export async function acceptResult(taskId: number, locale: string) {
   const session = await requireAuth()
+  if (!session.isAdmin) throw new Error('Only admin can verify tasks')
 
   const task = await db.task.findUnique({ where: { id: taskId } })
   if (!task || task.status !== 'REVIEW') throw new Error('Task not in review')
-  if (task.posterId !== session.userId) throw new Error('Not your task')
   if (!task.executorId) throw new Error('No executor')
 
   await db.$transaction([

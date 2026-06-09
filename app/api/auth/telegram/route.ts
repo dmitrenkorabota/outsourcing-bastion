@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
           username: body.username ?? null,
           photoUrl: body.photo_url ?? null,
           isAdmin: true,
+          coins: 100,
         },
       })
     } else {
@@ -85,6 +86,7 @@ export async function POST(req: NextRequest) {
             username: body.username ?? null,
             photoUrl: body.photo_url ?? null,
             invitedById: invite.createdById,
+            coins: 100,
           },
         })
         await tx.inviteCode.update({
