@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/session'
@@ -25,12 +26,24 @@ export async function generateMetadata({ params }: Props) {
 }
 
 async function TaskFeed({
-  locale, q, category, minReward, maxReward, sort,
+  locale, userId, invitedById, q, category, minReward, maxReward, sort,
 }: {
-  locale: string; q?: string; category?: string
+  locale: string
+  userId: number
+  invitedById: number | null
+  q?: string; category?: string
   minReward?: string; maxReward?: string; sort?: string
 }) {
   const t = await getTranslations({ locale, namespace: 'exchange' })
+
+  // Visible tasks: mine + tasks by users I invited + tasks by who invited me
+  const networkFilter = {
+    OR: [
+      { posterId: userId },
+      { poster: { invitedById: userId } },
+      ...(invitedById ? [{ posterId: invitedById }] : []),
+    ],
+  }
 
   let tasks: typeof DEMO_TASKS = []
 
@@ -38,6 +51,7 @@ async function TaskFeed({
     const raw = await db.task.findMany({
       where: {
         status: 'OPEN',
+        ...networkFilter,
         ...(q && {
           OR: [
             { title: { contains: q, mode: 'insensitive' } },
@@ -96,10 +110,34 @@ export default async function ExchangePage({ params, searchParams }: Props) {
   const t = await getTranslations({ locale, namespace: 'exchange' })
   const session = await getSession()
 
-  let totalOpen = DEMO_TASKS.filter((t) => t.status === 'OPEN').length
+  if (!session) redirect(`/${locale}/login`)
+
+  // Get current user's invite relationship
+  let currentUser: { id: number; invitedById: number | null } | null = null
   try {
-    totalOpen = await db.task.count({ where: { status: 'OPEN' } })
-  } catch { /* use demo count */ }
+    currentUser = await db.user.findUnique({
+      where: { id: session.userId },
+      select: { id: true, invitedById: true },
+    })
+  } catch { /* use session userId */ }
+
+  const userId = session.userId
+  const invitedById = currentUser?.invitedById ?? null
+
+  // Count open tasks visible to this user
+  let totalOpen = 0
+  try {
+    totalOpen = await db.task.count({
+      where: {
+        status: 'OPEN',
+        OR: [
+          { posterId: userId },
+          { poster: { invitedById: userId } },
+          ...(invitedById ? [{ posterId: invitedById }] : []),
+        ],
+      },
+    })
+  } catch { totalOpen = DEMO_TASKS.filter((t) => t.status === 'OPEN').length }
 
   return (
     <div style={{ maxWidth: '1152px', margin: '0 auto', padding: '0 1rem' }}>
@@ -109,7 +147,6 @@ export default async function ExchangePage({ params, searchParams }: Props) {
         className="anim-up"
         style={{ position: 'relative', padding: '3.5rem 0 2.5rem', overflow: 'hidden' }}
       >
-        {/* Ambient glow */}
         <div style={{
           position: 'absolute',
           top: '-60px', left: '50%',
@@ -144,7 +181,6 @@ export default async function ExchangePage({ params, searchParams }: Props) {
                 </span>
               </h1>
 
-              {/* Stats */}
               <div
                 className="anim-up d2"
                 style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}
@@ -165,18 +201,16 @@ export default async function ExchangePage({ params, searchParams }: Props) {
               </div>
             </div>
 
-            {session && (
-              <Link
-                href={`/${locale}/tasks/new`}
-                className="btn-primary anim-up d3"
-                style={{ padding: '0.6rem 1.2rem', fontSize: '0.875rem' }}
-              >
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                  <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-                </svg>
-                {locale === 'ru' ? 'Разместить задачу' : 'Post Task'}
-              </Link>
-            )}
+            <Link
+              href={`/${locale}/tasks/new`}
+              className="btn-primary anim-up d3"
+              style={{ padding: '0.6rem 1.2rem', fontSize: '0.875rem' }}
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+              </svg>
+              {locale === 'ru' ? 'Разместить задачу' : 'Post Task'}
+            </Link>
           </div>
         </div>
       </div>
@@ -221,7 +255,7 @@ export default async function ExchangePage({ params, searchParams }: Props) {
           </div>
         }
       >
-        <TaskFeed locale={locale} {...sp} />
+        <TaskFeed locale={locale} userId={userId} invitedById={invitedById} {...sp} />
       </Suspense>
 
       <div style={{ height: '4rem' }} />

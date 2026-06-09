@@ -41,6 +41,24 @@ export default async function TaskPage({ params }: Props) {
 
   if (!task) notFound()
 
+  // Access control: only poster, their invitees, or who invited poster can view
+  if (session) {
+    try {
+      const currentUser = await db.user.findUnique({
+        where: { id: session.userId },
+        select: { invitedById: true },
+      })
+      const canSee =
+        task.posterId === session.userId ||
+        task.executorId === session.userId ||
+        task.poster.invitedById === session.userId ||
+        (currentUser?.invitedById != null && currentUser.invitedById === task.posterId)
+      if (!canSee) notFound()
+    } catch { /* allow on DB error */ }
+  } else {
+    notFound()
+  }
+
   const daysLeft = task.deadline
     ? Math.ceil((new Date(task.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null
