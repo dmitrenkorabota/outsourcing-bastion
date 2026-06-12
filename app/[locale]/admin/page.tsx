@@ -22,11 +22,11 @@ export default async function AdminPage({ params, searchParams }: Props) {
   const t = await getTranslations({ locale, namespace: 'admin' })
   const activeTab = tab ?? 'disputes'
 
+  if (!session?.isAdmin) redirect(`/${locale}/login`)
+
   let openDisputes: any[] = []
   let pendingTasks: any[] = []
   let users: any[] = []
-
-  if (!session?.isAdmin) redirect(`/${locale}/login`)
 
   try {
     ;[openDisputes, pendingTasks, users] = await Promise.all([
@@ -39,197 +39,375 @@ export default async function AdminPage({ params, searchParams }: Props) {
         orderBy: { createdAt: 'desc' },
       }),
       db.task.findMany({
-        where: { status: { in: ['OPEN', 'IN_PROGRESS', 'REVIEW', 'DISPUTED'] } },
-        include: { poster: { select: { username: true, firstName: true, id: true } } },
-        orderBy: { createdAt: 'desc' },
+        where: {
+          status: { in: ['OPEN', 'IN_PROGRESS', 'REVIEW', 'DISPUTED'] },
+          OR: [
+            { posterId: session.userId },
+            { poster: { invitedById: session.userId } },
+          ],
+        },
+        include: {
+          poster: { select: { username: true, firstName: true, id: true } },
+          executor: { select: { username: true, firstName: true } },
+        },
+        orderBy: [
+          { status: 'asc' },
+          { createdAt: 'desc' },
+        ],
         take: 50,
       }),
       db.user.findMany({
-        orderBy: { createdAt: 'desc' },
-        take: 50,
+        where: {
+          OR: [
+            { id: session.userId },
+            { invitedById: session.userId },
+          ],
+        },
+        orderBy: [{ isAdmin: 'desc' }, { createdAt: 'asc' }],
+        take: 100,
         select: {
           id: true, firstName: true, lastName: true,
-          username: true, coins: true, rating: true,
+          username: true, coins: true, rating: true, ratingCount: true,
           isAdmin: true, createdAt: true,
           _count: { select: { tasksPosted: true, tasksTaken: true } },
         },
       }),
     ])
-  } catch {
-    openDisputes = [{
-      id: 1, taskId: 3, reason: 'Исполнитель не выходит на связь уже 2 дня.',
-      createdAt: new Date(),
-      task: { id: 3, title: 'Настроить CI/CD pipeline', reward: 200, posterId: 4, executorId: 1, poster: { username: null, firstName: 'Дмитрий' } },
-      raisedBy: { username: 'ivan_p', firstName: 'Иван' },
-    }]
-    pendingTasks = [
-      { id: 1, title: 'Нарисовать логотип', status: 'OPEN', category: 'design', reward: 150, createdAt: new Date(), poster: { id: 2, username: 'alex_dev', firstName: 'Алексей' } },
-      { id: 3, title: 'Настроить CI/CD pipeline', status: 'IN_PROGRESS', category: 'development', reward: 200, createdAt: new Date(), poster: { id: 4, username: null, firstName: 'Дмитрий' } },
-      { id: 6, title: 'Сверстать email-шаблон', status: 'REVIEW', category: 'development', reward: 110, createdAt: new Date(), poster: { id: 6, username: 'sv_design', firstName: 'Светлана' } },
-    ]
-    users = [
-      { id: 1, firstName: 'Иван', lastName: 'Петров', username: 'ivan_p', coins: 580, rating: 4.7, isAdmin: false, createdAt: new Date('2024-01-15'), _count: { tasksPosted: 5, tasksTaken: 3 } },
-      { id: 2, firstName: 'Алексей', lastName: null, username: 'alex_dev', coins: 320, rating: 4.9, isAdmin: false, createdAt: new Date('2024-02-01'), _count: { tasksPosted: 8, tasksTaken: 1 } },
-      { id: 3, firstName: 'Марина', lastName: 'К.', username: 'marina_k', coins: 150, rating: 4.5, isAdmin: false, createdAt: new Date('2024-02-10'), _count: { tasksPosted: 2, tasksTaken: 4 } },
-      { id: 0, firstName: 'Admin', lastName: null, username: 'admin', coins: 9999, rating: 5.0, isAdmin: true, createdAt: new Date('2024-01-01'), _count: { tasksPosted: 0, tasksTaken: 0 } },
-    ]
-  }
+  } catch { /* keep empty arrays */ }
 
   const totalCoins = users.reduce((s, u) => s + u.coins, 0)
+  const reviewCount = pendingTasks.filter((t) => t.status === 'REVIEW').length
+
+  const userName = (u: { username?: string | null; firstName: string }) =>
+    u.username ? `@${u.username}` : u.firstName
+
+  const statusColor: Record<string, string> = {
+    OPEN: 'var(--accent)',
+    IN_PROGRESS: 'var(--warning)',
+    REVIEW: '#A78BFA',
+    DISPUTED: 'var(--danger)',
+  }
 
   return (
-    <div style={{ maxWidth: '1152px', margin: '0 auto', padding: '2rem 1rem 4rem' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem 4rem' }}>
 
-      {/* Header */}
-      <div className="anim-up" style={{ marginBottom: '28px' }}>
-        <h1 style={{
-          fontSize: 'clamp(22px, 3vw, 28px)',
-          fontWeight: 700,
-          letterSpacing: '-0.02em',
-          color: 'var(--text-1)',
-          marginBottom: '4px',
-        }}>
-          {t('title')}
-        </h1>
-        <p style={{ fontSize: '14px', color: 'var(--text-3)' }}>
-          {locale === 'ru' ? 'Управление платформой' : 'Platform management'}
+      {/* Page header */}
+      <div className="anim-up" style={{ marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '4px' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-1)', letterSpacing: '-0.02em' }}>
+            {t('title')}
+          </h1>
+          {reviewCount > 0 && (
+            <span style={{
+              fontSize: '11px', fontWeight: 600,
+              padding: '2px 8px', borderRadius: '99px',
+              background: 'rgba(139,92,246,0.12)',
+              color: '#A78BFA',
+              border: '1px solid rgba(139,92,246,0.2)',
+            }}>
+              {reviewCount} {locale === 'ru' ? 'ждёт проверки' : 'need review'}
+            </span>
+          )}
+        </div>
+        <p style={{ fontSize: '13px', color: 'var(--text-3)' }}>
+          {locale === 'ru' ? 'Управление рабочим пространством' : 'Workspace management'}
         </p>
       </div>
 
-      {/* Stats bar */}
+      {/* Metrics row */}
       <div
         className="anim-up d1"
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', marginBottom: '24px' }}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '1px',
+          background: 'var(--border)',
+          borderRadius: 'var(--radius-lg)',
+          overflow: 'hidden',
+          marginBottom: '1.5rem',
+          border: '1px solid var(--border)',
+        }}
       >
         {[
-          { label: locale === 'ru' ? 'Споры' : 'Disputes', value: openDisputes.length, color: 'var(--danger)' },
-          { label: locale === 'ru' ? 'Активные задачи' : 'Active tasks', value: pendingTasks.length, color: 'var(--accent-bright)' },
-          { label: locale === 'ru' ? 'Пользователи' : 'Users', value: users.length, color: 'var(--success)' },
-          { label: locale === 'ru' ? 'Монет в системе' : 'Total coins', value: totalCoins, color: 'var(--gold)' },
-        ].map((s) => (
-          <div key={s.label} className="card" style={{ padding: '16px', textAlign: 'center' }}>
-            <div style={{ fontSize: '24px', fontWeight: 700, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-3)', marginTop: '3px' }}>{s.label}</div>
+          { label: locale === 'ru' ? 'Открытых споров' : 'Open disputes', value: openDisputes.length, color: openDisputes.length > 0 ? 'var(--danger)' : 'var(--text-1)' },
+          { label: locale === 'ru' ? 'На проверке' : 'Awaiting review', value: reviewCount, color: reviewCount > 0 ? '#A78BFA' : 'var(--text-1)' },
+          { label: locale === 'ru' ? 'Участников' : 'Members', value: users.length, color: 'var(--text-1)' },
+          { label: locale === 'ru' ? 'Монет в обороте' : 'Coins in circulation', value: totalCoins, color: 'var(--gold)' },
+        ].map((m) => (
+          <div
+            key={m.label}
+            style={{
+              background: 'var(--bg-card)',
+              padding: '18px 20px',
+            }}
+          >
+            <div style={{
+              fontSize: '24px', fontWeight: 700,
+              fontVariantNumeric: 'tabular-nums',
+              letterSpacing: '-0.03em',
+              color: m.color,
+              lineHeight: 1,
+              marginBottom: '5px',
+            }}>
+              {m.value}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-3)', fontWeight: 500 }}>
+              {m.label}
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="anim-up d2">
+      {/* Tabs */}
+      <div className="anim-up d2" style={{ marginBottom: '1.25rem' }}>
         <AdminTabs locale={locale} activeTab={activeTab} />
       </div>
 
-      <div style={{ marginTop: '20px' }}>
-
-        {/* Disputes */}
-        {activeTab === 'disputes' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {openDisputes.length === 0 ? (
-              <div className="card" style={{ padding: '4rem 2rem', textAlign: 'center' }}>
-                <p style={{ color: 'var(--text-3)' }}>
-                  {locale === 'ru' ? 'Открытых споров нет' : 'No open disputes'}
-                </p>
+      {/* ── Disputes ── */}
+      {activeTab === 'disputes' && (
+        <div className="anim-in" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {openDisputes.length === 0 ? (
+            <div style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '3rem 2rem',
+              textAlign: 'center',
+            }}>
+              <div style={{
+                width: '36px', height: '36px',
+                borderRadius: '8px',
+                background: 'var(--success-dim)',
+                border: '1px solid var(--success-border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 12px',
+              }}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" style={{ color: 'var(--success)' }}>
+                  <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
-            ) : (
-              openDisputes.map((dispute) => (
-                <div
-                  key={dispute.id}
-                  className="card"
-                  style={{
-                    padding: '1.25rem',
-                    borderColor: 'var(--danger-border)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                    <div>
-                      <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-1)' }}>
-                        Task #{dispute.taskId}: {dispute.task.title.slice(0, 60)}
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-3)', marginTop: '4px' }}>
-                        {locale === 'ru' ? 'Открыт' : 'Raised by'}: {dispute.raisedBy.username ? `@${dispute.raisedBy.username}` : dispute.raisedBy.firstName}
-                        {' · '}
-                        {new Date(dispute.createdAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US')}
-                      </div>
-                    </div>
-                    <span className="badge badge-disputed">{locale === 'ru' ? 'Спор' : 'Dispute'}</span>
-                  </div>
-
-                  <div style={{
-                    background: 'var(--danger-dim)',
-                    border: '1px solid var(--danger-border)',
-                    borderRadius: 'var(--radius-sm)',
-                    padding: '10px 14px',
-                    fontSize: '13px',
-                    color: 'var(--text-2)',
-                    marginBottom: '14px',
-                  }}>
-                    <strong style={{ color: 'var(--danger)' }}>{locale === 'ru' ? 'Причина:' : 'Reason:'}</strong>{' '}
-                    {dispute.reason}
-                  </div>
-
-                  <div style={{ fontSize: '12px', color: 'var(--text-3)', marginBottom: '12px' }}>
-                    {locale === 'ru' ? 'Вознаграждение' : 'Reward'}:{' '}
-                    <strong style={{ color: 'var(--gold)' }}>{dispute.task.reward} ✦</strong>
-                    {' · '}
-                    {locale === 'ru' ? 'Заказчик' : 'Poster'}:{' '}
-                    {dispute.task.poster.username ? `@${dispute.task.poster.username}` : dispute.task.poster.firstName}
-                  </div>
-
-                  <ResolveDisputeForm disputeId={dispute.id} locale={locale} />
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {/* Moderation */}
-        {activeTab === 'moderation' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {pendingTasks.map((task) => (
+              <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-2)', marginBottom: '4px' }}>
+                {locale === 'ru' ? 'Открытых споров нет' : 'No open disputes'}
+              </p>
+              <p style={{ fontSize: '12px', color: 'var(--text-4)' }}>
+                {locale === 'ru' ? 'Всё в порядке' : 'Everything is fine'}
+              </p>
+            </div>
+          ) : (
+            openDisputes.map((dispute) => (
               <div
-                key={task.id}
-                className="card card-hover"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 18px' }}
+                key={dispute.id}
+                style={{
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-lg)',
+                  overflow: 'hidden',
+                }}
               >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                    <TaskStatusBadge status={task.status} />
-                    <span style={{ fontSize: '11px', color: 'var(--text-4)' }}>#{task.id}</span>
+                {/* Dispute header */}
+                <div style={{
+                  padding: '14px 18px',
+                  borderBottom: '1px solid var(--border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  flexWrap: 'wrap',
+                }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+                      <span className="badge badge-disputed">Dispute</span>
+                      <Link
+                        href={`/${locale}/tasks/${dispute.taskId}`}
+                        style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-1)', textDecoration: 'none' }}
+                      >
+                        {dispute.task.title.length > 60
+                          ? dispute.task.title.slice(0, 60) + '…'
+                          : dispute.task.title}
+                      </Link>
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-4)', display: 'flex', gap: '12px' }}>
+                      <span>{locale === 'ru' ? 'Открыл' : 'Raised by'}: {userName(dispute.raisedBy)}</span>
+                      <span>{new Date(dispute.createdAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US')}</span>
+                      <span style={{ color: 'var(--gold)' }}>{dispute.task.reward} ✦</span>
+                    </div>
                   </div>
-                  <Link
-                    href={`/${locale}/tasks/${task.id}`}
-                    style={{
-                      fontSize: '14px', fontWeight: 600, color: 'var(--text-1)',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      display: 'block', textDecoration: 'none',
-                    }}
-                  >
-                    {task.title}
-                  </Link>
-                  <p style={{ fontSize: '12px', color: 'var(--text-4)' }}>
-                    {task.poster.username ? `@${task.poster.username}` : task.poster.firstName}
-                    {' · '}{new Date(task.createdAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US')}
+                </div>
+
+                {/* Reason */}
+                <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-4)', marginBottom: '5px' }}>
+                    {locale === 'ru' ? 'Причина' : 'Reason'}
+                  </div>
+                  <p style={{ fontSize: '13px', color: 'var(--text-2)', lineHeight: 1.6 }}>
+                    {dispute.reason}
                   </p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-                  <div className="coin-chip">{task.reward} ✦</div>
-                  {task.status === 'REVIEW' && (
-                    <AcceptTaskButton taskId={task.id} locale={locale} />
-                  )}
+
+                {/* Resolution form */}
+                <div style={{ padding: '14px 18px' }}>
+                  <ResolveDisputeForm disputeId={dispute.id} locale={locale} />
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
+      )}
 
-        {/* Users */}
-        {activeTab === 'users' && (
-          <div className="card" style={{ overflow: 'hidden' }}>
+      {/* ── Moderation ── */}
+      {activeTab === 'moderation' && (
+        <div className="anim-in">
+          {pendingTasks.length === 0 ? (
+            <div style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '3rem',
+              textAlign: 'center',
+            }}>
+              <p style={{ fontSize: '14px', color: 'var(--text-3)' }}>
+                {locale === 'ru' ? 'Активных задач нет' : 'No active tasks'}
+              </p>
+            </div>
+          ) : (
+            <div style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-lg)',
+              overflow: 'hidden',
+            }}>
+              {/* Table header */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 100px 80px 100px',
+                gap: '0',
+                padding: '10px 18px',
+                borderBottom: '1px solid var(--border)',
+              }}>
+                {[
+                  locale === 'ru' ? 'Задача' : 'Task',
+                  locale === 'ru' ? 'Статус' : 'Status',
+                  locale === 'ru' ? 'Награда' : 'Reward',
+                  locale === 'ru' ? 'Действие' : 'Action',
+                ].map((h) => (
+                  <div key={h} style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-4)' }}>
+                    {h}
+                  </div>
+                ))}
+              </div>
+
+              {/* Rows */}
+              {pendingTasks.map((task, i) => (
+                <div
+                  key={task.id}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 100px 80px 100px',
+                    gap: '0',
+                    padding: '12px 18px',
+                    borderBottom: i < pendingTasks.length - 1 ? '1px solid var(--border)' : 'none',
+                    alignItems: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  {/* Status strip */}
+                  <div style={{
+                    position: 'absolute',
+                    left: 0, top: 0, bottom: 0,
+                    width: '2px',
+                    background: statusColor[task.status] ?? 'var(--border)',
+                  }} />
+
+                  {/* Task name */}
+                  <div style={{ paddingLeft: '4px', minWidth: 0 }}>
+                    <Link
+                      href={`/${locale}/tasks/${task.id}`}
+                      style={{
+                        fontSize: '13px', fontWeight: 500,
+                        color: 'var(--text-1)',
+                        textDecoration: 'none',
+                        display: 'block',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {task.title}
+                    </Link>
+                    <div style={{ fontSize: '11px', color: 'var(--text-4)', marginTop: '2px' }}>
+                      {userName(task.poster)}
+                      {task.executor && ` → ${userName(task.executor)}`}
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <TaskStatusBadge status={task.status} />
+                  </div>
+
+                  {/* Reward */}
+                  <div>
+                    <span className="coin-chip">{task.reward} ✦</span>
+                  </div>
+
+                  {/* Action */}
+                  <div>
+                    {task.status === 'REVIEW' ? (
+                      <AcceptTaskButton taskId={task.id} locale={locale} />
+                    ) : (
+                      <Link
+                        href={`/${locale}/tasks/${task.id}`}
+                        style={{
+                          fontSize: '11px', fontWeight: 500,
+                          color: 'var(--text-3)',
+                          textDecoration: 'none',
+                          padding: '0.3rem 0.6rem',
+                          borderRadius: 'var(--radius-sm)',
+                          border: '1px solid var(--border)',
+                          transition: 'border-color 0.12s, color 0.12s',
+                          display: 'inline-block',
+                        }}
+                      >
+                        {locale === 'ru' ? 'Открыть' : 'View'}
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Users ── */}
+      {activeTab === 'users' && (
+        <div className="anim-in">
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)',
+            overflow: 'hidden',
+          }}>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '600px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                    {['ID', locale === 'ru' ? 'Имя' : 'Name', locale === 'ru' ? 'Юзернейм' : 'Username', locale === 'ru' ? 'Монеты' : 'Coins', locale === 'ru' ? 'Рейтинг' : 'Rating', locale === 'ru' ? 'Задач' : 'Posted', locale === 'ru' ? 'Выполнил' : 'Done', 'Admin'].map((h) => (
-                      <th key={h} style={{ textAlign: 'left', padding: '12px 16px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)' }}>{h}</th>
+                    {['#', locale === 'ru' ? 'Пользователь' : 'User', locale === 'ru' ? 'Монеты' : 'Coins', locale === 'ru' ? 'Рейтинг' : 'Rating', locale === 'ru' ? 'Задач' : 'Tasks', locale === 'ru' ? 'Роль' : 'Role', locale === 'ru' ? 'С нами с' : 'Member since'].map((h) => (
+                      <th
+                        key={h}
+                        style={{
+                          textAlign: 'left',
+                          padding: '10px 16px',
+                          fontSize: '10px',
+                          fontWeight: 600,
+                          letterSpacing: '0.06em',
+                          textTransform: 'uppercase',
+                          color: 'var(--text-4)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {h}
+                      </th>
                     ))}
                   </tr>
                 </thead>
@@ -238,26 +416,56 @@ export default async function AdminPage({ params, searchParams }: Props) {
                     <tr
                       key={u.id}
                       className="row-hover"
-                      style={{
-                        borderBottom: i < users.length - 1 ? '1px solid var(--border)' : 'none',
-                      }}
+                      style={{ borderBottom: i < users.length - 1 ? '1px solid var(--border)' : 'none' }}
                     >
-                      <td style={{ padding: '12px 16px', color: 'var(--text-4)' }}>#{u.id}</td>
-                      <td style={{ padding: '12px 16px', fontWeight: 500 }}>
+                      <td style={{ padding: '12px 16px', color: 'var(--text-4)', fontVariantNumeric: 'tabular-nums', fontSize: '11px', fontFamily: 'monospace' }}>
+                        {u.id}
+                      </td>
+                      <td style={{ padding: '12px 16px', minWidth: '160px' }}>
                         <Link
                           href={`/${locale}/profile/${u.id}`}
-                          style={{ color: 'var(--text-1)', textDecoration: 'none' }}
+                          style={{ textDecoration: 'none' }}
                         >
-                          {u.firstName} {u.lastName ?? ''}
+                          <div style={{ fontWeight: 500, color: 'var(--text-1)' }}>
+                            {u.firstName}{u.lastName ? ' ' + u.lastName : ''}
+                          </div>
+                          {u.username && (
+                            <div style={{ fontSize: '11px', color: 'var(--text-4)', marginTop: '1px' }}>
+                              @{u.username}
+                            </div>
+                          )}
                         </Link>
                       </td>
-                      <td style={{ padding: '12px 16px', color: 'var(--text-3)' }}>{u.username ? `@${u.username}` : '—'}</td>
-                      <td style={{ padding: '12px 16px', color: 'var(--gold)', fontWeight: 700 }}>{u.coins}</td>
-                      <td style={{ padding: '12px 16px', color: 'var(--text-2)' }}>{u.rating.toFixed(1)}</td>
-                      <td style={{ padding: '12px 16px', color: 'var(--text-2)' }}>{u._count.tasksPosted}</td>
-                      <td style={{ padding: '12px 16px', color: 'var(--text-2)' }}>{u._count.tasksTaken}</td>
                       <td style={{ padding: '12px 16px' }}>
-                        {u.isAdmin ? <span className="badge badge-review">Admin</span> : '—'}
+                        <span style={{
+                          fontFamily: 'monospace', fontWeight: 700,
+                          color: 'var(--gold)', fontVariantNumeric: 'tabular-nums',
+                          fontSize: '13px',
+                        }}>
+                          {u.coins}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 16px', color: 'var(--text-2)', fontSize: '13px' }}>
+                        {u.ratingCount > 0 ? (
+                          <span>★ {u.rating.toFixed(1)}</span>
+                        ) : (
+                          <span style={{ color: 'var(--text-4)' }}>—</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-3)' }}>
+                          {u._count.tasksPosted + u._count.tasksTaken}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 16px' }}>
+                        {u.isAdmin ? (
+                          <span className="badge badge-open">Admin</span>
+                        ) : (
+                          <span className="badge badge-cancelled">{locale === 'ru' ? 'Участник' : 'Member'}</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '12px 16px', color: 'var(--text-4)', fontSize: '11px', whiteSpace: 'nowrap' }}>
+                        {new Date(u.createdAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </td>
                     </tr>
                   ))}
@@ -265,20 +473,30 @@ export default async function AdminPage({ params, searchParams }: Props) {
               </table>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Grant coins */}
-        {activeTab === 'grant' && (
-          <div style={{ maxWidth: '480px' }}>
-            <div className="card" style={{ padding: '1.5rem' }}>
-              <div className="section-label" style={{ marginBottom: '16px' }}>
-                {locale === 'ru' ? 'Начислить монеты' : 'Grant coins'}
-              </div>
-              <GrantCoinsForm locale={locale} />
+      {/* ── Grant Coins ── */}
+      {activeTab === 'grant' && (
+        <div className="anim-in" style={{ maxWidth: '440px' }}>
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '1.5rem',
+          }}>
+            <div style={{ marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-1)', marginBottom: '3px' }}>
+                {locale === 'ru' ? 'Начислить монеты' : 'Grant Coins'}
+              </h2>
+              <p style={{ fontSize: '12px', color: 'var(--text-3)' }}>
+                {locale === 'ru' ? 'Переводите коины любому участнику' : 'Transfer coins to any member'}
+              </p>
             </div>
+            <GrantCoinsForm locale={locale} />
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

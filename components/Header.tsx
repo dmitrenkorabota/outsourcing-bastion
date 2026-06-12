@@ -39,10 +39,10 @@ export default function Header({ user, locale }: { user: User | null; locale: st
     <header
       className="sticky top-0 z-50"
       style={{
-        background: 'rgba(5,14,11,0.85)',
-        backdropFilter: 'blur(16px) saturate(1.6)',
-        WebkitBackdropFilter: 'blur(16px) saturate(1.6)',
-        borderBottom: '1px solid rgba(20,184,166,0.12)',
+        background: 'rgba(12,12,12,0.92)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: '1px solid var(--border)',
       }}
     >
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">

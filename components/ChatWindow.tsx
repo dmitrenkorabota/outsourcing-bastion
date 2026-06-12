@@ -8,28 +8,27 @@ type ChatMessage = {
   senderId: number
   content: string
   createdAt: Date | string
-  sender: {
-    id: number
-    firstName: string
-    username: string | null
-  }
+  sender: { id: number; firstName: string; username: string | null }
 }
 
 type Props = {
   initialMessages: ChatMessage[]
   currentUserId: number
   locale: string
+  memberCount?: number
 }
 
-export default function ChatWindow({ initialMessages, currentUserId, locale }: Props) {
+export default function ChatWindow({ initialMessages, currentUserId, locale, memberCount }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
   const [text, setText] = useState('')
   const [isPending, startTransition] = useTransition()
   const bottomRef = useRef<HTMLDivElement>(null)
-  const lastIdRef = useRef(initialMessages.length > 0 ? initialMessages[initialMessages.length - 1].id : 0)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [atBottom, setAtBottom] = useState(true)
+  const lastIdRef = useRef(
+    initialMessages.length > 0 ? initialMessages[initialMessages.length - 1].id : 0
+  )
 
+  // Poll every 3s
   useEffect(() => {
     const poll = async () => {
       try {
@@ -44,21 +43,13 @@ export default function ChatWindow({ initialMessages, currentUserId, locale }: P
     return () => clearInterval(id)
   }, [])
 
+  // Scroll to bottom on mount and new messages
   useEffect(() => {
-    if (atBottom) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [messages, atBottom])
-
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
   useEffect(() => {
     bottomRef.current?.scrollIntoView()
   }, [])
-
-  const handleScroll = () => {
-    const el = containerRef.current
-    if (!el) return
-    setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 60)
-  }
 
   const handleSend = () => {
     const content = text.trim()
@@ -71,14 +62,16 @@ export default function ChatWindow({ initialMessages, currentUserId, locale }: P
         setMessages((prev) => [...prev, ...newer])
         lastIdRef.current = newer[newer.length - 1].id
       }
-      setAtBottom(true)
     })
   }
 
-  const formatTime = (d: Date | string) =>
-    new Date(d).toLocaleTimeString(locale === 'ru' ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+  const fmt = (d: Date | string) =>
+    new Date(d).toLocaleTimeString(locale === 'ru' ? 'ru-RU' : 'en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
 
-  const formatDate = (d: Date | string) => {
+  const fmtDate = (d: Date | string) => {
     const date = new Date(d)
     const today = new Date()
     const yesterday = new Date(today)
@@ -87,100 +80,155 @@ export default function ChatWindow({ initialMessages, currentUserId, locale }: P
       return locale === 'ru' ? 'Сегодня' : 'Today'
     if (date.toDateString() === yesterday.toDateString())
       return locale === 'ru' ? 'Вчера' : 'Yesterday'
-    return date.toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'long' })
+    return date.toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US', {
+      day: 'numeric',
+      month: 'long',
+    })
   }
 
-  // Group messages by date
+  // Group by date
   const grouped: { date: string; msgs: ChatMessage[] }[] = []
   for (const msg of messages) {
-    const d = formatDate(msg.createdAt)
+    const d = fmtDate(msg.createdAt)
     const last = grouped[grouped.length - 1]
     if (last?.date === d) last.msgs.push(msg)
     else grouped.push({ date: d, msgs: [msg] })
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '600px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '620px' }}>
+
+      {/* Chat header */}
+      <div style={{
+        padding: '12px 18px',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexShrink: 0,
+      }}>
+        <div>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-1)' }}>
+            {locale === 'ru' ? 'Рабочее пространство' : 'Workspace'}
+          </div>
+          {memberCount !== undefined && (
+            <div style={{ fontSize: '11px', color: 'var(--text-4)', marginTop: '1px' }}>
+              {memberCount} {locale === 'ru'
+                ? memberCount === 1 ? 'участник' : memberCount < 5 ? 'участника' : 'участников'
+                : `member${memberCount !== 1 ? 's' : ''}`}
+            </div>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--success)' }} />
+          <span style={{ fontSize: '11px', color: 'var(--text-4)' }}>
+            {locale === 'ru' ? 'обновляется' : 'live'}
+          </span>
+        </div>
+      </div>
+
       {/* Messages */}
       <div
         ref={containerRef}
-        onScroll={handleScroll}
         style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '16px',
+          padding: '16px 18px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '4px',
+          gap: '2px',
           scrollbarWidth: 'thin',
           scrollbarColor: 'var(--border) transparent',
         }}
       >
-        {messages.length === 0 && (
-          <div style={{ textAlign: 'center', color: 'var(--text-4)', fontSize: '13px', margin: 'auto', padding: '2rem' }}>
-            {locale === 'ru' ? 'Сообщений пока нет. Начните общение!' : 'No messages yet. Start the conversation!'}
+        {messages.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            color: 'var(--text-4)',
+            fontSize: '13px',
+            margin: 'auto',
+            padding: '3rem 1rem',
+            lineHeight: 2,
+          }}>
+            <div style={{ fontSize: '20px', marginBottom: '8px' }}>💬</div>
+            {locale === 'ru'
+              ? 'Сообщений пока нет.\nНачните общение!'
+              : 'No messages yet.\nStart the conversation!'}
           </div>
-        )}
+        ) : (
+          grouped.map(({ date, msgs }) => (
+            <div key={date}>
+              {/* Date separator */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                margin: '12px 0 10px',
+              }}>
+                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+                <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
+                  {date}
+                </span>
+                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+              </div>
 
-        {grouped.map(({ date, msgs }) => (
-          <div key={date}>
-            <div style={{
-              textAlign: 'center',
-              margin: '12px 0 8px',
-              fontSize: '11px',
-              color: 'var(--text-4)',
-              fontWeight: 600,
-              letterSpacing: '0.05em',
-            }}>
-              {date}
-            </div>
-            {msgs.map((msg) => {
-              const isOwn = msg.senderId === currentUserId
-              const name = msg.sender.username ? `@${msg.sender.username}` : msg.sender.firstName
-              return (
-                <div
-                  key={msg.id}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: isOwn ? 'flex-end' : 'flex-start',
-                    marginBottom: '8px',
-                  }}
-                >
-                  {!isOwn && (
-                    <span style={{ fontSize: '11px', color: 'var(--accent-bright)', marginBottom: '3px', paddingLeft: '2px', fontWeight: 600 }}>
-                      {name}
-                    </span>
-                  )}
-                  <div style={{
-                    maxWidth: '72%',
-                    padding: '9px 13px',
-                    borderRadius: isOwn ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                    background: isOwn
-                      ? 'linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)'
-                      : 'var(--bg-elevated)',
-                    border: isOwn ? 'none' : '1px solid var(--border)',
-                    color: isOwn ? '#fff' : 'var(--text-1)',
-                    fontSize: '14px',
-                    lineHeight: 1.5,
-                    wordBreak: 'break-word',
-                  }}>
-                    {msg.content}
+              {/* Messages in group */}
+              {msgs.map((msg, mi) => {
+                const isOwn = msg.senderId === currentUserId
+                const name = msg.sender.username ? `@${msg.sender.username}` : msg.sender.firstName
+                const showSender = !isOwn && (mi === 0 || msgs[mi - 1].senderId !== msg.senderId)
+
+                return (
+                  <div
+                    key={msg.id}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: isOwn ? 'flex-end' : 'flex-start',
+                      marginBottom: '2px',
+                      marginTop: showSender ? '8px' : '0',
+                    }}
+                  >
+                    {showSender && (
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: 'var(--accent-bright)',
+                        marginBottom: '3px',
+                        paddingLeft: '2px',
+                      }}>
+                        {name}
+                      </span>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', flexDirection: isOwn ? 'row-reverse' : 'row' }}>
+                      <div style={{
+                        maxWidth: '68%',
+                        padding: '8px 12px',
+                        borderRadius: isOwn ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
+                        background: isOwn ? 'var(--accent)' : 'var(--bg-elevated)',
+                        border: isOwn ? 'none' : '1px solid var(--border)',
+                        color: isOwn ? '#fff' : 'var(--text-1)',
+                        fontSize: '13px',
+                        lineHeight: 1.55,
+                        wordBreak: 'break-word',
+                      }}>
+                        {msg.content}
+                      </div>
+                      <span style={{
+                        fontSize: '10px',
+                        color: 'var(--text-4)',
+                        flexShrink: 0,
+                        paddingBottom: '2px',
+                      }}>
+                        {fmt(msg.createdAt)}
+                      </span>
+                    </div>
                   </div>
-                  <span style={{
-                    fontSize: '10px',
-                    color: 'var(--text-4)',
-                    marginTop: '3px',
-                    paddingRight: isOwn ? '2px' : '0',
-                    paddingLeft: isOwn ? '0' : '2px',
-                  }}>
-                    {formatTime(msg.createdAt)}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-        ))}
+                )
+              })}
+            </div>
+          ))
+        )}
         <div ref={bottomRef} />
       </div>
 
@@ -188,10 +236,10 @@ export default function ChatWindow({ initialMessages, currentUserId, locale }: P
       <div style={{
         padding: '12px 16px',
         borderTop: '1px solid var(--border)',
-        background: 'var(--bg-elevated)',
         display: 'flex',
         gap: '8px',
-        alignItems: 'flex-end',
+        alignItems: 'center',
+        flexShrink: 0,
       }}>
         <input
           type="text"
@@ -205,17 +253,19 @@ export default function ChatWindow({ initialMessages, currentUserId, locale }: P
           }}
           placeholder={locale === 'ru' ? 'Написать сообщение...' : 'Type a message...'}
           className="input"
-          style={{ flex: 1, fontSize: '14px' }}
+          style={{ flex: 1, fontSize: '13px', padding: '0.5rem 0.8rem' }}
           disabled={isPending}
           maxLength={2000}
+          autoComplete="off"
         />
         <button
           onClick={handleSend}
           disabled={isPending || !text.trim()}
           className="btn-primary"
-          style={{ padding: '0.55rem 1rem', flexShrink: 0 }}
+          style={{ padding: '0.5rem 0.9rem', flexShrink: 0, gap: '0' }}
+          aria-label={locale === 'ru' ? 'Отправить' : 'Send'}
         >
-          <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>

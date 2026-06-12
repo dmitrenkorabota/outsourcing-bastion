@@ -13,38 +13,37 @@ const TABS = [
 export default function AdminTabs({ locale, activeTab }: { locale: string; activeTab: string }) {
   const t = useTranslations('admin')
 
-  const tabStyle = (active: boolean): React.CSSProperties => ({
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '0.4rem 1rem',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: 500,
-    textDecoration: 'none',
-    transition: 'all 0.15s',
-    whiteSpace: 'nowrap',
-    background: active ? 'var(--bg-card)' : 'transparent',
-    color: active ? 'var(--text-1)' : 'var(--text-3)',
-    boxShadow: active ? '0 1px 4px rgba(0,0,0,0.3)' : 'none',
-    border: active ? '1px solid var(--border)' : '1px solid transparent',
-  })
-
   return (
     <div style={{
       display: 'flex',
-      gap: '4px',
-      background: 'var(--bg-elevated)',
-      borderRadius: '12px',
-      padding: '4px',
-      border: '1px solid var(--border)',
-      flexWrap: 'wrap',
-      width: 'fit-content',
+      gap: '2px',
+      borderBottom: '1px solid var(--border)',
+      paddingBottom: '0',
     }}>
-      {TABS.map(({ key, label }) => (
-        <Link key={key} href={`/${locale}/admin?tab=${key}`} style={tabStyle(activeTab === key)}>
-          {t(label)}
-        </Link>
-      ))}
+      {TABS.map(({ key, label }) => {
+        const active = activeTab === key
+        return (
+          <Link
+            key={key}
+            href={`/${locale}/admin?tab=${key}`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '0.5rem 0.9rem',
+              fontSize: '13px',
+              fontWeight: active ? 500 : 400,
+              color: active ? 'var(--text-1)' : 'var(--text-3)',
+              textDecoration: 'none',
+              borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent',
+              marginBottom: '-1px',
+              transition: 'color 0.12s, border-color 0.12s',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {t(label)}
+          </Link>
+        )
+      })}
     </div>
   )
 }

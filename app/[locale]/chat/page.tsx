@@ -14,6 +14,7 @@ export default async function ChatPage({ params }: Props) {
   if (!session) redirect(`/${locale}/login`)
 
   let initialMessages: any[] = []
+  let memberCount = 0
 
   try {
     const user = await db.user.findUnique({
@@ -26,42 +27,61 @@ export default async function ChatPage({ params }: Props) {
         ? session.userId
         : (user.invitedById ?? session.userId)
 
-      initialMessages = await db.message.findMany({
-        where: { workspaceAdminId },
-        orderBy: { createdAt: 'asc' },
-        take: 200,
-        include: {
-          sender: { select: { id: true, firstName: true, username: true } },
-        },
-      })
+      ;[initialMessages, memberCount] = await Promise.all([
+        db.message.findMany({
+          where: { workspaceAdminId },
+          orderBy: { createdAt: 'asc' },
+          take: 200,
+          include: {
+            sender: { select: { id: true, firstName: true, username: true } },
+          },
+        }),
+        db.user.count({
+          where: {
+            OR: [
+              { id: workspaceAdminId },
+              { invitedById: workspaceAdminId },
+            ],
+          },
+        }),
+      ])
     }
   } catch { /* empty */ }
 
   return (
-    <div style={{ maxWidth: '768px', margin: '0 auto', padding: '2rem 1rem 4rem' }}>
+    <div style={{ maxWidth: '768px', margin: '0 auto', padding: '2rem 1.5rem 4rem' }}>
 
-      <div className="anim-up" style={{ marginBottom: '24px' }}>
+      <div className="anim-up" style={{ marginBottom: '1.5rem' }}>
         <h1 style={{
-          fontSize: 'clamp(22px, 3vw, 28px)',
-          fontWeight: 700,
+          fontSize: '20px',
+          fontWeight: 600,
           letterSpacing: '-0.02em',
           color: 'var(--text-1)',
           marginBottom: '4px',
         }}>
           {locale === 'ru' ? 'Чат' : 'Chat'}
         </h1>
-        <p style={{ fontSize: '14px', color: 'var(--text-3)' }}>
+        <p style={{ fontSize: '13px', color: 'var(--text-3)' }}>
           {locale === 'ru'
-            ? 'Общайтесь с участниками вашего рабочего пространства'
+            ? 'Общайтесь с участниками рабочего пространства'
             : 'Chat with your workspace members'}
         </p>
       </div>
 
-      <div className="card anim-up d1" style={{ overflow: 'hidden', padding: 0 }}>
+      <div
+        className="anim-up d1"
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-lg)',
+          overflow: 'hidden',
+        }}
+      >
         <ChatWindow
           initialMessages={initialMessages}
           currentUserId={session.userId}
           locale={locale}
+          memberCount={memberCount}
         />
       </div>
     </div>
