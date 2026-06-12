@@ -78,7 +78,7 @@ body {
 
 /* ─── Animations ─────────────────────────────────────── */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(14px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes fadeIn {
@@ -90,20 +90,20 @@ body {
   100% { background-position: 400% 0; }
 }
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: scale(0.97) translateY(6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
 }
 
-.anim-up       { animation: fadeInUp 0.45s cubic-bezier(0.16,1,0.3,1) both; }
-.anim-in       { animation: fadeIn  0.3s ease both; }
-.anim-scale-in { animation: scaleIn 0.35s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-up       { animation: fadeInUp 0.5s  cubic-bezier(0.22,1,0.36,1) both; will-change: transform, opacity; }
+.anim-in       { animation: fadeIn   0.35s cubic-bezier(0.22,1,0.36,1) both; will-change: opacity; }
+.anim-scale-in { animation: scaleIn  0.45s cubic-bezier(0.22,1,0.36,1) both; will-change: transform, opacity; }
 
-.d1 { animation-delay: 0.04s; }
-.d2 { animation-delay: 0.08s; }
-.d3 { animation-delay: 0.12s; }
-.d4 { animation-delay: 0.16s; }
-.d5 { animation-delay: 0.20s; }
-.d6 { animation-delay: 0.24s; }
+.d1 { animation-delay: 0.03s; }
+.d2 { animation-delay: 0.06s; }
+.d3 { animation-delay: 0.09s; }
+.d4 { animation-delay: 0.12s; }
+.d5 { animation-delay: 0.15s; }
+.d6 { animation-delay: 0.18s; }
 
 /* ─── Gradient text ──────────────────────────────────── */
 .gradient-text {
@@ -128,11 +128,13 @@ body {
 }
 
 .card-hover {
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  transition: border-color 0.25s cubic-bezier(0.22,1,0.36,1),
+              box-shadow   0.25s cubic-bezier(0.22,1,0.36,1),
+              transform    0.25s cubic-bezier(0.22,1,0.36,1);
 }
 .card-hover:hover {
   border-color: var(--border-hover);
-  box-shadow: 0 0 0 1px var(--border-hover), 0 16px 48px rgba(0,0,0,0.5), 0 0 60px var(--accent-glow);
+  box-shadow: 0 0 0 1px var(--border-hover), 0 12px 40px rgba(0,0,0,0.45), 0 0 50px var(--accent-glow);
   transform: translateY(-2px);
 }
 
@@ -150,7 +152,9 @@ body {
   border: 1px solid rgba(255,255,255,0.1);
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s, box-shadow 0.15s, transform 0.12s;
+  transition: background 0.2s cubic-bezier(0.22,1,0.36,1),
+              box-shadow  0.2s cubic-bezier(0.22,1,0.36,1),
+              transform   0.2s cubic-bezier(0.22,1,0.36,1);
   position: relative;
   overflow: hidden;
 }
@@ -166,7 +170,7 @@ body {
   box-shadow: 0 0 24px var(--accent-glow);
   transform: translateY(-1px);
 }
-.btn-primary:active:not(:disabled) { transform: translateY(0); }
+.btn-primary:active:not(:disabled) { transform: translateY(0); transition-duration: 0.1s; }
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .btn-outline {
@@ -182,7 +186,10 @@ body {
   border: 1px solid var(--border);
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s;
+  transition: background 0.2s cubic-bezier(0.22,1,0.36,1),
+              color        0.2s cubic-bezier(0.22,1,0.36,1),
+              border-color 0.2s cubic-bezier(0.22,1,0.36,1),
+              transform    0.2s cubic-bezier(0.22,1,0.36,1);
 }
 .btn-outline:hover:not(:disabled) {
   background: var(--bg-hover);
