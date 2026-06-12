@@ -1,8 +1,8 @@
+import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/session'
-import { DEMO_TASKS } from '@/lib/demo'
 import TaskStatusBadge from '@/components/TaskStatusBadge'
 import MyTasksTabs from '@/components/MyTasksTabs'
 
@@ -18,9 +18,10 @@ export default async function MyTasksPage({ params, searchParams }: Props) {
   const t = await getTranslations({ locale, namespace: 'myTasks' })
   const isExecutor = tab === 'executor'
 
+  if (!session) redirect(`/${locale}/login`)
+
   let tasks: any[] = []
   try {
-    if (!session) throw new Error('no session')
     tasks = isExecutor
       ? await db.task.findMany({
           where: { executorId: session.userId },
@@ -33,9 +34,7 @@ export default async function MyTasksPage({ params, searchParams }: Props) {
           include: { executor: { select: { id: true, firstName: true, username: true } } },
         })
   } catch {
-    tasks = isExecutor
-      ? DEMO_TASKS.filter((t) => t.executorId !== null).map((t) => ({ ...t, poster: t.poster }))
-      : DEMO_TASKS.slice(0, 4).map((t) => ({ ...t, executor: null }))
+    tasks = []
   }
 
   return (

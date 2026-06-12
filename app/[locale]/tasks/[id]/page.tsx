@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { db } from '@/lib/db'
@@ -61,7 +61,7 @@ export default async function TaskPage({ params }: Props) {
       if (!canSee) notFound()
     } catch { /* allow on DB error */ }
   } else {
-    notFound()
+    redirect(`/${locale}/login`)
   }
 
   const daysLeft = task.deadline

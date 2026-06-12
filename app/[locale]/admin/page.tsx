@@ -25,8 +25,9 @@ export default async function AdminPage({ params, searchParams }: Props) {
   let pendingTasks: any[] = []
   let users: any[] = []
 
+  if (!session?.isAdmin) redirect(`/${locale}/login`)
+
   try {
-    if (!session?.isAdmin) throw new Error('demo')
     ;[openDisputes, pendingTasks, users] = await Promise.all([
       db.dispute.findMany({
         where: { status: 'OPEN' },
@@ -222,7 +223,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)' }}>
                     {['ID', locale === 'ru' ? 'Имя' : 'Name', locale === 'ru' ? 'Юзернейм' : 'Username', locale === 'ru' ? 'Монеты' : 'Coins', locale === 'ru' ? 'Рейтинг' : 'Rating', locale === 'ru' ? 'Задач' : 'Posted', locale === 'ru' ? 'Выполнил' : 'Done', 'Admin'].map((h) => (
-                      <th key={h} className="section-label" style={{ textAlign: 'left', padding: '12px 16px' }}>{h}</th>
+                      <th key={h} style={{ textAlign: 'left', padding: '12px 16px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -230,12 +231,10 @@ export default async function AdminPage({ params, searchParams }: Props) {
                   {users.map((u, i) => (
                     <tr
                       key={u.id}
+                      className="row-hover"
                       style={{
                         borderBottom: i < users.length - 1 ? '1px solid var(--border)' : 'none',
-                        transition: 'background 0.15s',
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                     >
                       <td style={{ padding: '12px 16px', color: 'var(--text-4)' }}>#{u.id}</td>
                       <td style={{ padding: '12px 16px', fontWeight: 500 }}>
