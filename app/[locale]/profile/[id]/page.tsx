@@ -217,21 +217,10 @@ export default async function ProfilePage({ params }: Props) {
                         opacity: invite.isUsed ? 0.6 : 1,
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: invite.isUsed ? 0 : '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <code style={{
-                            fontSize: '13px',
-                            fontFamily: 'ui-monospace, "SF Mono", monospace',
-                            fontWeight: 700,
-                            color: invite.isUsed ? 'var(--text-3)' : 'var(--accent-bright)',
-                            letterSpacing: '0.08em',
-                          }}>
-                            {invite.code}
-                          </code>
-                          <span style={{ fontSize: '11px', color: 'var(--text-4)' }}>
-                            {new Date(invite.createdAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US')}
-                          </span>
-                        </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: invite.isUsed ? 0 : '8px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-4)' }}>
+                          {new Date(invite.createdAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US')}
+                        </span>
                         <span className={`badge ${invite.isUsed ? 'badge-cancelled' : 'badge-open'}`}>
                           {invite.isUsed
                             ? (locale === 'ru' ? 'Использован' : 'Used')
@@ -254,7 +243,7 @@ export default async function ProfilePage({ params }: Props) {
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
                           }}>
-                            .../login?code={invite.code}
+                            {locale === 'ru' ? 'Ссылка-приглашение' : 'Invite link'} #{invite.id}
                           </div>
                           <CopyInviteLink code={invite.code} locale={locale} />
                         </div>
