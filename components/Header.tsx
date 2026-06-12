@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { useTransition } from 'react'
 import LocaleSwitcher from './LocaleSwitcher'
+import ThemeToggle from './ThemeToggle'
 import { logout } from '@/lib/actions'
 
 type User = {
@@ -39,7 +40,7 @@ export default function Header({ user, locale }: { user: User | null; locale: st
     <header
       className="sticky top-0 z-50"
       style={{
-        background: 'rgba(12,12,12,0.92)',
+        background: 'var(--header-bg)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--border)',
@@ -121,6 +122,7 @@ export default function Header({ user, locale }: { user: User | null; locale: st
 
         {/* Right side */}
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <LocaleSwitcher />
 
           {user ? (

@@ -42,6 +42,11 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <html lang={locale} className="h-full">
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `try{var t=localStorage.getItem('ob-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}`
+        }} />
+      </head>
       <body className="min-h-full flex flex-col" style={{ background: 'var(--bg-base)', color: 'var(--text-1)' }}>
         <NextIntlClientProvider messages={messages}>
           <Header user={user} locale={locale} />

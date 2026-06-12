@@ -51,6 +51,46 @@
   --radius:    7px;
   --radius-lg: 9px;
   --radius-xl: 12px;
+
+  /* Header background (theme-aware) */
+  --header-bg: rgba(12,12,12,0.92);
+}
+
+/* ─── Light theme ────────────────────────────────────── */
+[data-theme="light"] {
+  --bg-base:     #F7F7F8;
+  --bg-surface:  #EFEFEF;
+  --bg-card:     #FFFFFF;
+  --bg-elevated: #FAFAFA;
+  --bg-hover:    #EBEBEC;
+  --bg-active:   #E2E2E4;
+
+  --border:       #E2E2E5;
+  --border-hover: #C8C8CD;
+  --border-focus: #14B8A6;
+
+  --text-1:  #111111;
+  --text-2:  #515158;
+  --text-3:  #7A7A82;
+  --text-4:  #ADADB5;
+
+  --accent-dim:    rgba(20,184,166,0.09);
+  --accent-glow:   rgba(20,184,166,0.09);
+  --accent-border: rgba(20,184,166,0.25);
+
+  --gold-dim:    rgba(232,151,26,0.09);
+  --gold-border: rgba(232,151,26,0.22);
+
+  --success-dim:    rgba(34,197,94,0.09);
+  --success-border: rgba(34,197,94,0.22);
+
+  --danger-dim:    rgba(239,68,68,0.09);
+  --danger-border: rgba(239,68,68,0.22);
+
+  --warning-dim:    rgba(234,179,8,0.09);
+  --warning-border: rgba(234,179,8,0.22);
+
+  --header-bg: rgba(247,247,248,0.92);
 }
 
 @theme inline {
