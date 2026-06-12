@@ -28,6 +28,7 @@ export default function Header({ user, locale }: { user: User | null; locale: st
     { href: `/${locale}`, label: t('exchange') },
     ...(user ? [
       { href: `/${locale}/members`, label: t('members') },
+      { href: `/${locale}/chat`, label: t('chat') },
       { href: `/${locale}/my-tasks`, label: t('myTasks') },
       { href: `/${locale}/profile/${user.id}`, label: t('profile') },
       ...(user.isAdmin ? [{ href: `/${locale}/admin`, label: t('admin') }] : []),

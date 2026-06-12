@@ -5,6 +5,7 @@
     "profile": "Profile",
     "admin": "Admin",
     "members": "Members",
+    "chat": "Chat",
     "createTask": "Post Task",
     "login": "Login via Telegram",
     "logout": "Logout"
@@ -91,6 +92,8 @@
     "rating": "Rating",
     "skills": "Skills",
     "addSkill": "Add skill",
+    "bio": "About",
+    "editProfile": "Edit profile",
     "history": "Transaction History",
     "invites": "My Invites",
     "inviteLink": "Invite Link",

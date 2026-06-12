@@ -7,6 +7,7 @@ import AdminTabs from '@/components/AdminTabs'
 import ResolveDisputeForm from '@/components/ResolveDisputeForm'
 import GrantCoinsForm from '@/components/GrantCoinsForm'
 import TaskStatusBadge from '@/components/TaskStatusBadge'
+import AcceptTaskButton from '@/components/AcceptTaskButton'
 
 type Props = {
   params: Promise<{ locale: string }>
@@ -209,7 +210,12 @@ export default async function AdminPage({ params, searchParams }: Props) {
                     {' · '}{new Date(task.createdAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US')}
                   </p>
                 </div>
-                <div className="coin-chip" style={{ flexShrink: 0 }}>{task.reward} ✦</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                  <div className="coin-chip">{task.reward} ✦</div>
+                  {task.status === 'REVIEW' && (
+                    <AcceptTaskButton taskId={task.id} locale={locale} />
+                  )}
+                </div>
               </div>
             ))}
           </div>

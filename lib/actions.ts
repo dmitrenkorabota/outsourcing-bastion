@@ -260,6 +260,69 @@ export async function grantCoins(formData: FormData) {
   revalidatePath(`/${locale}`)
 }
 
+export async function updateProfile(formData: FormData) {
+  'use server'
+  const session = await requireAuth()
+
+  const bio = formData.get('bio') as string
+  const skillsRaw = formData.get('skills') as string
+  const locale = formData.get('locale') as string
+
+  const skills = skillsRaw
+    ? skillsRaw.split(',').map((s) => s.trim()).filter(Boolean)
+    : []
+
+  await db.user.update({
+    where: { id: session.userId },
+    data: { bio: bio || null, skills },
+  })
+
+  revalidatePath(`/${locale}/profile/${session.userId}`)
+}
+
+export async function sendMessage(content: string, locale: string) {
+  const session = await requireAuth()
+  if (!content.trim()) throw new Error('Empty message')
+
+  const user = await db.user.findUnique({
+    where: { id: session.userId },
+    select: { isAdmin: true, invitedById: true },
+  })
+  if (!user) throw new Error('User not found')
+
+  const workspaceAdminId = user.isAdmin ? session.userId : (user.invitedById ?? session.userId)
+
+  await db.message.create({
+    data: { senderId: session.userId, workspaceAdminId, content: content.trim() },
+  })
+
+  revalidatePath(`/${locale}/chat`)
+}
+
+export async function getChatMessages(after?: number) {
+  const session = await requireAuth()
+
+  const user = await db.user.findUnique({
+    where: { id: session.userId },
+    select: { isAdmin: true, invitedById: true },
+  })
+  if (!user) return []
+
+  const workspaceAdminId = user.isAdmin ? session.userId : (user.invitedById ?? session.userId)
+
+  return db.message.findMany({
+    where: {
+      workspaceAdminId,
+      ...(after ? { id: { gt: after } } : {}),
+    },
+    orderBy: { createdAt: 'asc' },
+    take: 200,
+    include: {
+      sender: { select: { id: true, firstName: true, username: true } },
+    },
+  })
+}
+
 export async function resolveDispute(disputeId: number, resolution: string, payExecutor: boolean, locale: string) {
   const session = await requireAuth()
   if (!session.isAdmin) throw new Error('Forbidden')

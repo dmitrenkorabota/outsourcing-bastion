@@ -14,6 +14,7 @@ model User {
   firstName   String
   lastName    String?
   photoUrl    String?
+  bio         String?
   coins       Int      @default(0)
   rating      Float    @default(0)
   ratingCount Int      @default(0)
@@ -29,6 +30,16 @@ model User {
   transactions   Transaction[]
   inviteCodes    InviteCode[]
   disputesRaised Dispute[]     @relation("DisputeRaiser")
+  messagesSent   Message[]     @relation("MessageSender")
+}
+
+model Message {
+  id               Int      @id @default(autoincrement())
+  senderId         Int
+  sender           User     @relation("MessageSender", fields: [senderId], references: [id])
+  workspaceAdminId Int
+  content          String
+  createdAt        DateTime @default(now())
 }
 
 model InviteCode {

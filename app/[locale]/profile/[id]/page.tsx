@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { getSession } from '@/lib/session'
 import GenerateInviteButton from '@/components/GenerateInviteButton'
 import CopyInviteLink from '@/components/CopyInviteLink'
+import EditProfileForm from '@/components/EditProfileForm'
 
 type Props = {
   params: Promise<{ locale: string; id: string }>
@@ -13,6 +14,7 @@ type Props = {
 const DEMO_PROFILE = {
   id: 1,
   firstName: 'Иван', lastName: 'Петров', username: 'ivan_p',
+  bio: null as string | null,
   coins: 580, rating: 4.7, ratingCount: 12,
   skills: ['Next.js', 'Design', 'Translation'],
   isAdmin: false, createdAt: new Date('2024-01-15'),
@@ -130,6 +132,20 @@ export default async function ProfilePage({ params }: Props) {
             <p style={{ fontSize: '11px', color: 'var(--text-4)', marginTop: '6px' }}>
               {t('memberSince')} {new Date(user.createdAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US')}
             </p>
+
+            {(user as any).bio && (
+              <p style={{ fontSize: '13px', color: 'var(--text-2)', marginTop: '12px', lineHeight: 1.6, textAlign: 'left' }}>
+                {(user as any).bio}
+              </p>
+            )}
+
+            {isOwn && (
+              <EditProfileForm
+                initialBio={(user as any).bio ?? null}
+                initialSkills={user.skills}
+                locale={locale}
+              />
+            )}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '18px' }}>
               {statBox(user.coins, `✦ ${t('balance')}`, 'var(--gold)')}
